@@ -1,0 +1,1248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Admin · Subscription Code Generator</title>
+    <style>
+        /* ----- RESET & BASE ----- */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Roboto, system-ui, sans-serif;
+            background: #ecfdf5;
+            color: #064e3b;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .admin-container {
+            max-width: 1000px;
+            width: 100%;
+            background: #ffffff;
+            border-radius: 24px;
+            box-shadow: 0 25px 80px rgba(0, 0, 0, 0.10);
+            padding: 30px 35px;
+            position: relative;
+            transition: 0.3s;
+        }
+
+        /* ----- GREEN THEME ----- */
+        .admin-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 15px;
+            border-bottom: 3px solid #0d7c3f;
+            padding-bottom: 18px;
+            margin-bottom: 28px;
+        }
+        .admin-header h1 {
+            font-size: 24px;
+            font-weight: 700;
+            color: #065f46;
+            letter-spacing: -0.3px;
+        }
+        .admin-header h1 small {
+            font-size: 14px;
+            font-weight: 400;
+            color: #475569;
+            display: block;
+            margin-top: 2px;
+        }
+        .badge-admin {
+            background: #0d7c3f;
+            color: #fff;
+            padding: 6px 20px;
+            border-radius: 40px;
+            font-size: 13px;
+            font-weight: 600;
+            letter-spacing: 0.3px;
+            white-space: nowrap;
+        }
+        .badge-admin .lock-icon {
+            margin-right: 6px;
+        }
+
+        /* ----- LOGIN SCREEN ----- */
+        #loginScreen {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 40px 20px 30px 20px;
+            min-height: 380px;
+        }
+        #loginScreen .lock-big {
+            font-size: 56px;
+            margin-bottom: 12px;
+        }
+        #loginScreen h2 {
+            color: #065f46;
+            font-size: 22px;
+            margin-bottom: 4px;
+        }
+        #loginScreen p {
+            color: #64748b;
+            font-size: 14px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        #loginScreen .admin-name-display {
+            background: #f0fdf4;
+            border: 1px solid #a7f3d0;
+            border-radius: 12px;
+            padding: 10px 20px;
+            margin-bottom: 18px;
+            font-size: 15px;
+            color: #065f46;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+        #loginScreen .admin-name-display span {
+            font-weight: 400;
+            color: #475569;
+        }
+        #loginScreen .password-hint {
+            font-size: 13px;
+            color: #94a3b8;
+            background: #f8fafc;
+            padding: 6px 16px;
+            border-radius: 40px;
+            border: 1px dashed #d1d9e6;
+            margin-bottom: 18px;
+            font-family: 'Courier New', monospace;
+            letter-spacing: 1px;
+        }
+        #loginScreen .password-hint strong {
+            color: #0d7c3f;
+        }
+        .login-form {
+            display: flex;
+            gap: 12px;
+            width: 100%;
+            max-width: 400px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        .login-form input {
+            flex: 1;
+            min-width: 200px;
+            padding: 12px 18px;
+            border: 2px solid #d1fae5;
+            border-radius: 12px;
+            font-size: 16px;
+            background: #fafdfb;
+            transition: 0.2s;
+            font-family: 'Courier New', monospace;
+            letter-spacing: 1px;
+        }
+        .login-form input:focus {
+            border-color: #0d7c3f;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(13, 124, 63, 0.12);
+        }
+        .login-form button {
+            padding: 12px 36px;
+            background: #0d7c3f;
+            color: #fff;
+            border: none;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 16px;
+            cursor: pointer;
+            transition: 0.2s;
+            white-space: nowrap;
+        }
+        .login-form button:hover {
+            background: #065f2e;
+            transform: translateY(-1px);
+            box-shadow: 0 6px 18px rgba(13, 124, 63, 0.25);
+        }
+        .login-error {
+            color: #dc2626;
+            font-size: 14px;
+            font-weight: 500;
+            min-height: 24px;
+            margin-top: 10px;
+            text-align: center;
+        }
+
+        /* ----- DASHBOARD ----- */
+        #dashboard {
+            display: none;
+        }
+        #dashboard.active {
+            display: block;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 14px;
+            margin-bottom: 28px;
+        }
+        .stat-card {
+            background: #f0fdf4;
+            border-radius: 14px;
+            border: 1px solid #d1fae5;
+            padding: 16px 18px;
+            text-align: center;
+        }
+        .stat-card .num {
+            font-size: 28px;
+            font-weight: 800;
+            color: #065f46;
+            line-height: 1.2;
+        }
+        .stat-card .label {
+            font-size: 12px;
+            font-weight: 600;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+        .stat-card .num.green {
+            color: #0d7c3f;
+        }
+        .stat-card .num.red {
+            color: #dc2626;
+        }
+        .stat-card .num.amber {
+            color: #d97706;
+        }
+
+        .toolbar {
+            display: flex;
+            gap: 14px;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        .toolbar .left {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .toolbar .left .title {
+            font-weight: 700;
+            font-size: 18px;
+            color: #065f46;
+        }
+        .btn {
+            padding: 10px 28px;
+            border: none;
+            border-radius: 40px;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            transition: 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .btn-primary {
+            background: #0d7c3f;
+            color: #fff;
+        }
+        .btn-primary:hover {
+            background: #065f2e;
+            transform: translateY(-1px);
+            box-shadow: 0 6px 18px rgba(13, 124, 63, 0.25);
+        }
+        .btn-danger {
+            background: #dc2626;
+            color: #fff;
+        }
+        .btn-danger:hover {
+            background: #b91c1c;
+            transform: translateY(-1px);
+        }
+        .btn-outline {
+            background: transparent;
+            border: 2px solid #0d7c3f;
+            color: #0d7c3f;
+        }
+        .btn-outline:hover {
+            background: #0d7c3f;
+            color: #fff;
+        }
+        .btn-sm {
+            padding: 5px 14px;
+            font-size: 12px;
+            border-radius: 30px;
+        }
+        .btn-copy {
+            background: #f0fdf4;
+            color: #065f46;
+            border: 1px solid #d1fae5;
+        }
+        .btn-copy:hover {
+            background: #d1fae5;
+        }
+        .btn-revoke {
+            background: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+        .btn-revoke:hover {
+            background: #fecaca;
+        }
+
+        /* ----- CODE TABLE ----- */
+        .table-wrap {
+            overflow-x: auto;
+            border-radius: 14px;
+            border: 1px solid #e2e8f0;
+            background: #fafdfb;
+        }
+        .code-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+        .code-table th {
+            background: #0d7c3f;
+            color: #fff;
+            padding: 12px 16px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 13px;
+            letter-spacing: 0.3px;
+        }
+        .code-table td {
+            padding: 12px 16px;
+            border-bottom: 1px solid #e2e8f0;
+            vertical-align: middle;
+        }
+        .code-table tr:last-child td {
+            border-bottom: none;
+        }
+        .code-table tr:hover td {
+            background: #f0fdf4;
+        }
+        .code-table .code-cell {
+            font-family: 'Courier New', monospace;
+            font-weight: 700;
+            font-size: 15px;
+            color: #065f46;
+            letter-spacing: 0.5px;
+        }
+        .code-table .status-badge {
+            display: inline-block;
+            padding: 3px 14px;
+            border-radius: 40px;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+        .status-badge.active {
+            background: #d1fae5;
+            color: #065f46;
+        }
+        .status-badge.expired {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+        .status-badge.used {
+            background: #fef3c7;
+            color: #92400e;
+        }
+        .code-table .actions {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+        .code-table .empty-row td {
+            text-align: center;
+            color: #94a3b8;
+            padding: 40px 20px;
+            font-style: italic;
+        }
+        .code-table .expiry-cell {
+            font-size: 13px;
+            color: #475569;
+        }
+
+        /* ----- MODAL ----- */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(4px);
+            z-index: 9999;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .modal-overlay.active {
+            display: flex;
+        }
+        .modal-box {
+            background: #fff;
+            border-radius: 20px;
+            max-width: 480px;
+            width: 100%;
+            padding: 32px 36px;
+            box-shadow: 0 30px 80px rgba(0, 0, 0, 0.2);
+            animation: fadeUp 0.3s ease;
+        }
+        @keyframes fadeUp {
+            0% {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        .modal-box .modal-icon {
+            font-size: 44px;
+            text-align: center;
+            margin-bottom: 6px;
+        }
+        .modal-box h3 {
+            color: #065f46;
+            font-size: 20px;
+            text-align: center;
+            margin-bottom: 6px;
+        }
+        .modal-box p {
+            color: #475569;
+            font-size: 14px;
+            text-align: center;
+            margin-bottom: 18px;
+        }
+        .modal-box .generated-code {
+            background: #f0fdf4;
+            border: 2px solid #d1fae5;
+            border-radius: 12px;
+            padding: 16px 20px;
+            font-family: 'Courier New', monospace;
+            font-size: 22px;
+            font-weight: 800;
+            color: #065f46;
+            text-align: center;
+            letter-spacing: 2px;
+            margin-bottom: 6px;
+            word-break: break-all;
+        }
+        .modal-box .generated-info {
+            display: flex;
+            justify-content: space-between;
+            font-size: 13px;
+            color: #64748b;
+            padding: 6px 4px 12px 4px;
+            border-bottom: 1px solid #f1f5f9;
+            margin-bottom: 16px;
+        }
+        .modal-box .generated-info strong {
+            color: #065f46;
+        }
+        .modal-box .modal-actions {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        .modal-box .modal-actions .btn {
+            min-width: 120px;
+            justify-content: center;
+        }
+
+        /* ----- TOAST ----- */
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #065f46;
+            color: #fff;
+            padding: 14px 28px;
+            border-radius: 40px;
+            font-weight: 600;
+            font-size: 14px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+            z-index: 99999;
+            opacity: 0;
+            pointer-events: none;
+            transition: 0.4s ease;
+        }
+        .toast.show {
+            opacity: 1;
+            pointer-events: auto;
+            transform: translateX(-50%) translateY(0);
+        }
+        .toast.success {
+            background: #0d7c3f;
+        }
+        .toast.error {
+            background: #dc2626;
+        }
+        .toast.warning {
+            background: #d97706;
+        }
+
+        /* ----- LOGOUT BUTTON ----- */
+        .logout-btn {
+            background: transparent;
+            border: 1.5px solid #d1fae5;
+            color: #065f46;
+            padding: 6px 18px;
+            border-radius: 40px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .logout-btn:hover {
+            background: #fee2e2;
+            border-color: #fecaca;
+            color: #991b1b;
+        }
+
+        /* ----- RESPONSIVE ----- */
+        @media (max-width: 700px) {
+            .admin-container {
+                padding: 18px 16px;
+            }
+            .admin-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            .admin-header h1 {
+                font-size: 20px;
+            }
+            .login-form {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .login-form input {
+                min-width: unset;
+            }
+            .login-form button {
+                width: 100%;
+                justify-content: center;
+            }
+            .toolbar {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .toolbar .left {
+                justify-content: center;
+            }
+            .code-table {
+                font-size: 12px;
+            }
+            .code-table th,
+            .code-table td {
+                padding: 8px 10px;
+            }
+            .code-table .code-cell {
+                font-size: 12px;
+            }
+            .stats-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+            .modal-box {
+                padding: 24px 20px;
+            }
+            .modal-box .generated-code {
+                font-size: 18px;
+                padding: 12px 14px;
+            }
+        }
+        @media (max-width: 450px) {
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+            .admin-container {
+                padding: 12px 10px;
+            }
+            .code-table .actions .btn {
+                font-size: 10px;
+                padding: 3px 10px;
+            }
+        }
+
+        /* scrollbar */
+        .table-wrap::-webkit-scrollbar {
+            height: 6px;
+        }
+        .table-wrap::-webkit-scrollbar-track {
+            background: #f1f5f9;
+            border-radius: 10px;
+        }
+        .table-wrap::-webkit-scrollbar-thumb {
+            background: #d1fae5;
+            border-radius: 10px;
+        }
+        .table-wrap::-webkit-scrollbar-thumb:hover {
+            background: #a7f3d0;
+        }
+
+        /* footer */
+        .admin-footer {
+            text-align: center;
+            padding: 18px 0 4px 0;
+            border-top: 1px solid #d1fae5;
+            margin-top: 28px;
+            font-size: 13px;
+            color: #64748b;
+        }
+        .admin-footer strong {
+            color: #0d7c3f;
+        }
+        .admin-footer .ai-badge {
+            background: #0d7c3f;
+            color: #fff;
+            padding: 1px 12px;
+            border-radius: 40px;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.3px;
+            display: inline-block;
+            margin-left: 4px;
+        }
+
+        /* password change area */
+        .password-area {
+            margin-top: 20px;
+            padding-top: 16px;
+            border-top: 1px solid #e2e8f0;
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        .password-area .label {
+            font-size: 13px;
+            color: #64748b;
+            font-weight: 500;
+        }
+        .password-area input {
+            padding: 8px 16px;
+            border: 1.5px solid #d1fae5;
+            border-radius: 10px;
+            font-size: 14px;
+            background: #fafdfb;
+            font-family: 'Courier New', monospace;
+            width: 180px;
+        }
+        .password-area input:focus {
+            border-color: #0d7c3f;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(13, 124, 63, 0.10);
+        }
+        .password-area .btn-sm {
+            padding: 8px 20px;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ===== TOAST ===== -->
+    <div class="toast" id="toast"></div>
+
+    <!-- ===== MAIN CONTAINER ===== -->
+    <div class="admin-container">
+
+        <!-- HEADER -->
+        <header class="admin-header">
+            <div>
+                <h1>🔐 Admin · Code Generator <small>Subscription Management for Assessment Tool</small></h1>
+            </div>
+            <div class="badge-admin">
+                <span class="lock-icon">🛡️</span> Administrator Panel
+            </div>
+        </header>
+
+        <!-- ===== LOGIN SCREEN ===== -->
+        <div id="loginScreen">
+            <div class="lock-big">🔒</div>
+            <h2>Administrator Access</h2>
+            <p>Enter the administrator password to manage subscription codes.</p>
+            <div class="admin-name-display">
+                👤 <span>Administrator:</span> ME....O F.
+            </div>
+            <div class="password-hint">
+                🔑 Password: <strong>Admin@2025</strong>
+            </div>
+            <div class="login-form">
+                <input type="password" id="adminPasswordInput" placeholder="Enter password..." autocomplete="off" />
+                <button onclick="attemptLogin()">Unlock Panel</button>
+            </div>
+            <div class="login-error" id="loginError"></div>
+        </div>
+
+        <!-- ===== DASHBOARD ===== -->
+        <div id="dashboard">
+
+            <!-- Stats -->
+            <div class="stats-grid" id="statsGrid">
+                <div class="stat-card">
+                    <div class="num" id="statTotal">0</div>
+                    <div class="label">Total Codes</div>
+                </div>
+                <div class="stat-card">
+                    <div class="num green" id="statActive">0</div>
+                    <div class="label">Active (Valid)</div>
+                </div>
+                <div class="stat-card">
+                    <div class="num red" id="statExpired">0</div>
+                    <div class="label">Expired</div>
+                </div>
+                <div class="stat-card">
+                    <div class="num amber" id="statUsed">0</div>
+                    <div class="label">Used / Redeemed</div>
+                </div>
+            </div>
+
+            <!-- Toolbar -->
+            <div class="toolbar">
+                <div class="left">
+                    <span class="title">📋 Generated Codes</span>
+                    <button class="btn btn-primary" onclick="openGenerateModal()">➕ Generate New Code</button>
+                </div>
+                <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+                    <button class="logout-btn" onclick="logout()">🚪 Logout</button>
+                </div>
+            </div>
+
+            <!-- Code Table -->
+            <div class="table-wrap">
+                <table class="code-table" id="codeTable">
+                    <thead>
+                        <tr>
+                            <th>Code</th>
+                            <th>Generated</th>
+                            <th>Expiry Date</th>
+                            <th>Status</th>
+                            <th style="text-align:center;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="codeTableBody">
+                        <!-- rows injected by JS -->
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Password change (optional) -->
+            <div class="password-area">
+                <span class="label">🔑 Change Admin Password:</span>
+                <input type="text" id="newPasswordInput" placeholder="New password" maxlength="30" />
+                <button class="btn btn-primary btn-sm" onclick="changePassword()">Update</button>
+                <span style="font-size:12px; color:#94a3b8;">(stored locally)</span>
+            </div>
+
+            <!-- Footer -->
+            <div class="admin-footer">
+                🌿 Innovator: <strong>Melanio R. Florino Jr.</strong>
+                <span class="ai-badge">Powered by Deepseek AI</span>
+                &nbsp;·&nbsp; Admin v1.0
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== MODAL: GENERATE CODE ===== -->
+    <div class="modal-overlay" id="generateModal">
+        <div class="modal-box">
+            <div class="modal-icon">🎫</div>
+            <h3>Generate Subscription Code</h3>
+            <p>This code will be valid for <strong>3 months</strong> from today. The teacher-user can enter it in the assessment tool to unlock full access.</p>
+
+            <div class="generated-code" id="generatedCodeDisplay">SUB-XXXX-YYYY-ZZZZ</div>
+            <div class="generated-info">
+                <span>📅 <strong>Generated:</strong> <span id="genDateDisplay">—</span></span>
+                <span>⏳ <strong>Expires:</strong> <span id="genExpiryDisplay">—</span></span>
+            </div>
+
+            <div style="display:flex; gap:8px; justify-content:center; margin-bottom:16px; flex-wrap:wrap;">
+                <button class="btn btn-outline btn-sm" onclick="regenerateCode()">🔄 Regenerate</button>
+                <button class="btn btn-copy btn-sm" onclick="copyGeneratedCode()">📋 Copy Code</button>
+            </div>
+
+            <div class="modal-actions">
+                <button class="btn btn-primary" onclick="saveGeneratedCode()">💾 Save &amp; Close</button>
+                <button class="btn btn-outline" onclick="closeGenerateModal()">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ============================================================
+        //  CONSTANTS & CONFIG
+        // ============================================================
+        const STORAGE_KEY = 'subscription_codes_data';
+        const PASSWORD_KEY = 'admin_password_data';
+        const DEFAULT_PASSWORD = 'Admin@2025';
+        const ADMIN_NAME = 'ME....O F.';
+
+        // ============================================================
+        //  STATE
+        // ============================================================
+        let currentGeneratedCode = null;
+        let currentGeneratedExpiry = null;
+        let currentGeneratedDate = null;
+
+        // ============================================================
+        //  INIT
+        // ============================================================
+        document.addEventListener('DOMContentLoaded', function() {
+            // Check if already logged in (session)
+            const session = sessionStorage.getItem('admin_logged_in');
+            if (session === 'true') {
+                showDashboard();
+            } else {
+                // Check if password exists in localStorage, if not set default
+                if (!localStorage.getItem(PASSWORD_KEY)) {
+                    localStorage.setItem(PASSWORD_KEY, DEFAULT_PASSWORD);
+                }
+                document.getElementById('loginScreen').style.display = 'flex';
+                document.getElementById('dashboard').classList.remove('active');
+                document.getElementById('adminPasswordInput').focus();
+            }
+
+            // Enter key on password field
+            document.getElementById('adminPasswordInput').addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    attemptLogin();
+                }
+            });
+
+            // Enter key on new password field
+            document.getElementById('newPasswordInput').addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    changePassword();
+                }
+            });
+        });
+
+        // ============================================================
+        //  LOGIN / LOGOUT
+        // ============================================================
+        function attemptLogin() {
+            const input = document.getElementById('adminPasswordInput');
+            const password = input.value.trim();
+            const errorEl = document.getElementById('loginError');
+
+            if (!password) {
+                errorEl.textContent = 'Please enter the password.';
+                return;
+            }
+
+            const storedPassword = localStorage.getItem(PASSWORD_KEY) || DEFAULT_PASSWORD;
+            if (password === storedPassword) {
+                errorEl.textContent = '';
+                sessionStorage.setItem('admin_logged_in', 'true');
+                showDashboard();
+            } else {
+                errorEl.textContent = '❌ Incorrect password. Please try again.';
+                input.value = '';
+                input.focus();
+            }
+        }
+
+        function logout() {
+            sessionStorage.removeItem('admin_logged_in');
+            document.getElementById('dashboard').classList.remove('active');
+            document.getElementById('loginScreen').style.display = 'flex';
+            document.getElementById('adminPasswordInput').value = '';
+            document.getElementById('adminPasswordInput').focus();
+            document.getElementById('loginError').textContent = '';
+            showToast('Logged out successfully.', 'warning');
+        }
+
+        function showDashboard() {
+            document.getElementById('loginScreen').style.display = 'none';
+            document.getElementById('dashboard').classList.add('active');
+            renderCodeTable();
+            updateStats();
+        }
+
+        // ============================================================
+        //  PASSWORD MANAGEMENT
+        // ============================================================
+        function changePassword() {
+            const input = document.getElementById('newPasswordInput');
+            const newPass = input.value.trim();
+            if (!newPass) {
+                showToast('Please enter a new password.', 'error');
+                return;
+            }
+            if (newPass.length < 4) {
+                showToast('Password must be at least 4 characters.', 'error');
+                return;
+            }
+            localStorage.setItem(PASSWORD_KEY, newPass);
+            input.value = '';
+            showToast('✅ Admin password updated successfully!', 'success');
+            // Update hint display
+            const hintEl = document.querySelector('.password-hint strong');
+            if (hintEl) {
+                hintEl.textContent = newPass;
+            }
+        }
+
+        // ============================================================
+        //  CODE DATA MANAGEMENT
+        // ============================================================
+        function getCodes() {
+            const data = localStorage.getItem(STORAGE_KEY);
+            if (!data) return {};
+            try {
+                return JSON.parse(data);
+            } catch {
+                return {};
+            }
+        }
+
+        function saveCodes(codes) {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(codes));
+        }
+
+        function generateCodeString() {
+            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+            let result = 'SUB-';
+            for (let i = 0; i < 4; i++) {
+                result += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+            result += '-';
+            for (let i = 0; i < 4; i++) {
+                result += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+            result += '-';
+            for (let i = 0; i < 4; i++) {
+                result += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+            return result;
+        }
+
+        function generateUniqueCode() {
+            const codes = getCodes();
+            let code;
+            let attempts = 0;
+            do {
+                code = generateCodeString();
+                attempts++;
+            } while (codes[code] && attempts < 100);
+            return code;
+        }
+
+        function isCodeExpired(expiryDate) {
+            return new Date() > new Date(expiryDate);
+        }
+
+        function getCodeStatus(codeData) {
+            if (codeData.used) return 'used';
+            if (isCodeExpired(codeData.expiry)) return 'expired';
+            return 'active';
+        }
+
+        function getStatusBadge(status) {
+            const map = {
+                'active': '<span class="status-badge active">✅ Active</span>',
+                'expired': '<span class="status-badge expired">⛔ Expired</span>',
+                'used': '<span class="status-badge used">🔁 Used</span>'
+            };
+            return map[status] || map.expired;
+        }
+
+        // ============================================================
+        //  RENDER TABLE & STATS
+        // ============================================================
+        function renderCodeTable() {
+            const codes = getCodes();
+            const tbody = document.getElementById('codeTableBody');
+            const entries = Object.entries(codes);
+
+            if (entries.length === 0) {
+                tbody.innerHTML = `
+                            <tr class="empty-row">
+                                <td colspan="5">📭 No subscription codes generated yet. Click "Generate New Code" to create one.</td>
+                            </tr>
+                        `;
+                return;
+            }
+
+            // Sort by generation date (newest first)
+            entries.sort((a, b) => {
+                const dateA = new Date(a[1].generatedAt);
+                const dateB = new Date(b[1].generatedAt);
+                return dateB - dateA;
+            });
+
+            let html = '';
+            for (const [code, data] of entries) {
+                const status = getCodeStatus(data);
+                const genDate = new Date(data.generatedAt).toLocaleDateString('en-PH', {
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric'
+                });
+                const expiryDate = new Date(data.expiry).toLocaleDateString('en-PH', {
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric'
+                });
+                const isExpired = status === 'expired' || status === 'used';
+
+                html += `
+                            <tr>
+                                <td class="code-cell">${code}</td>
+                                <td style="font-size:13px; color:#475569;">${genDate}</td>
+                                <td class="expiry-cell">${expiryDate} ${isExpired ? '⚠️' : ''}</td>
+                                <td>${getStatusBadge(status)}</td>
+                                <td style="text-align:center;">
+                                    <div class="actions" style="justify-content:center;">
+                                        <button class="btn btn-copy btn-sm" onclick="copyCode('${code}')" title="Copy code">📋</button>
+                                        ${status === 'active' ? `<button class="btn btn-revoke btn-sm" onclick="revokeCode('${code}')" title="Mark as used/revoke">🚫</button>` : ''}
+                                        <button class="btn btn-danger btn-sm" onclick="deleteCode('${code}')" title="Delete permanently">🗑️</button>
+                                    </div>
+                                </td>
+                            </tr>
+                        `;
+            }
+
+            tbody.innerHTML = html;
+        }
+
+        function updateStats() {
+            const codes = getCodes();
+            const entries = Object.values(codes);
+            const total = entries.length;
+            let active = 0,
+                expired = 0,
+                used = 0;
+
+            for (const data of entries) {
+                const status = getCodeStatus(data);
+                if (status === 'active') active++;
+                else if (status === 'expired') expired++;
+                else if (status === 'used') used++;
+            }
+
+            document.getElementById('statTotal').textContent = total;
+            document.getElementById('statActive').textContent = active;
+            document.getElementById('statExpired').textContent = expired;
+            document.getElementById('statUsed').textContent = used;
+        }
+
+        // ============================================================
+        //  MODAL: GENERATE CODE
+        // ============================================================
+        function openGenerateModal() {
+            // Generate a fresh code
+            const code = generateUniqueCode();
+            const now = new Date();
+            const expiry = new Date(now);
+            expiry.setMonth(expiry.getMonth() + 3);
+
+            currentGeneratedCode = code;
+            currentGeneratedDate = now.toISOString();
+            currentGeneratedExpiry = expiry.toISOString();
+
+            document.getElementById('generatedCodeDisplay').textContent = code;
+            document.getElementById('genDateDisplay').textContent = now.toLocaleDateString('en-PH', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+            document.getElementById('genExpiryDisplay').textContent = expiry.toLocaleDateString('en-PH', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+
+            document.getElementById('generateModal').classList.add('active');
+        }
+
+        function closeGenerateModal() {
+            document.getElementById('generateModal').classList.remove('active');
+            currentGeneratedCode = null;
+            currentGeneratedDate = null;
+            currentGeneratedExpiry = null;
+        }
+
+        function regenerateCode() {
+            const code = generateUniqueCode();
+            const now = new Date();
+            const expiry = new Date(now);
+            expiry.setMonth(expiry.getMonth() + 3);
+
+            currentGeneratedCode = code;
+            currentGeneratedDate = now.toISOString();
+            currentGeneratedExpiry = expiry.toISOString();
+
+            document.getElementById('generatedCodeDisplay').textContent = code;
+            document.getElementById('genDateDisplay').textContent = now.toLocaleDateString('en-PH', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+            document.getElementById('genExpiryDisplay').textContent = expiry.toLocaleDateString('en-PH', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+            showToast('New code generated!', 'success');
+        }
+
+        function copyGeneratedCode() {
+            if (!currentGeneratedCode) return;
+            navigator.clipboard.writeText(currentGeneratedCode).then(() => {
+                showToast('✅ Code copied to clipboard!', 'success');
+            }).catch(() => {
+                // fallback
+                const text = currentGeneratedCode;
+                const area = document.createElement('textarea');
+                area.value = text;
+                document.body.appendChild(area);
+                area.select();
+                document.execCommand('copy');
+                document.body.removeChild(area);
+                showToast('✅ Code copied to clipboard!', 'success');
+            });
+        }
+
+        function saveGeneratedCode() {
+            if (!currentGeneratedCode) {
+                showToast('No code to save. Please generate one first.', 'error');
+                return;
+            }
+
+            const codes = getCodes();
+            if (codes[currentGeneratedCode]) {
+                showToast('⚠️ This code already exists. Please regenerate.', 'warning');
+                regenerateCode();
+                return;
+            }
+
+            codes[currentGeneratedCode] = {
+                generatedAt: currentGeneratedDate,
+                expiry: currentGeneratedExpiry,
+                used: false,
+            };
+
+            saveCodes(codes);
+            closeGenerateModal();
+            renderCodeTable();
+            updateStats();
+            showToast('✅ Code saved successfully!', 'success');
+        }
+
+        // ============================================================
+        //  CODE ACTIONS (Copy, Revoke, Delete)
+        // ============================================================
+        function copyCode(code) {
+            navigator.clipboard.writeText(code).then(() => {
+                showToast('✅ Code copied to clipboard!', 'success');
+            }).catch(() => {
+                const area = document.createElement('textarea');
+                area.value = code;
+                document.body.appendChild(area);
+                area.select();
+                document.execCommand('copy');
+                document.body.removeChild(area);
+                showToast('✅ Code copied to clipboard!', 'success');
+            });
+        }
+
+        function revokeCode(code) {
+            if (!confirm(`Mark code "${code}" as used/revoked? This will prevent it from being used again.`)) return;
+
+            const codes = getCodes();
+            if (!codes[code]) {
+                showToast('Code not found.', 'error');
+                return;
+            }
+            codes[code].used = true;
+            saveCodes(codes);
+            renderCodeTable();
+            updateStats();
+            showToast(`🔁 Code "${code}" marked as used.`, 'warning');
+        }
+
+        function deleteCode(code) {
+            if (!confirm(`⚠️ Permanently delete code "${code}"? This action cannot be undone.`)) return;
+
+            const codes = getCodes();
+            if (!codes[code]) {
+                showToast('Code not found.', 'error');
+                return;
+            }
+            delete codes[code];
+            saveCodes(codes);
+            renderCodeTable();
+            updateStats();
+            showToast(`🗑️ Code "${code}" deleted.`, 'warning');
+        }
+
+        // ============================================================
+        //  TOAST SYSTEM
+        // ============================================================
+        let toastTimeout = null;
+
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.className = 'toast ' + type;
+            // Force reflow
+            void toast.offsetWidth;
+            toast.classList.add('show');
+
+            clearTimeout(toastTimeout);
+            toastTimeout = setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3500);
+        }
+
+        // ============================================================
+        //  KEYBOARD SHORTCUTS
+        // ============================================================
+        document.addEventListener('keydown', function(e) {
+            // Escape to close modal
+            if (e.key === 'Escape') {
+                if (document.getElementById('generateModal').classList.contains('active')) {
+                    closeGenerateModal();
+                }
+            }
+        });
+
+        // ============================================================
+        //  AUTO-REFRESH TABLE every 60s
+        // ============================================================
+        setInterval(() => {
+            if (document.getElementById('dashboard').classList.contains('active')) {
+                renderCodeTable();
+                updateStats();
+            }
+        }, 60000);
+
+        console.log('🔐 Admin Panel loaded.');
+        console.log('👤 Administrator: ME....O F.');
+        console.log('🔑 Default password: Admin@2025');
+        console.log('📦 Codes stored in localStorage key: ' + STORAGE_KEY);
+    </script>
+
+</body>
+</html>

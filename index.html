@@ -1,0 +1,2268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Item Analysis & Assessment Report Generator</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js">
+    </script>
+    <style>
+        /* ----- RESET & BASE ----- */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Roboto, system-ui, sans-serif;
+            background: #ecfdf5;
+            color: #064e3b;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: #ffffff;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.08);
+            padding: 30px 35px;
+            position: relative;
+        }
+
+        /* ----- GREEN THEME OVERRIDES ----- */
+        .app-header {
+            border-bottom-color: #0d7c3f !important;
+        }
+        .app-header h1 {
+            color: #065f46 !important;
+        }
+        .badge-deped {
+            background: #0d7c3f !important;
+        }
+        .step-dot.active {
+            background: #0d7c3f !important;
+        }
+        .step-dot.done .num {
+            background: #0d7c3f !important;
+        }
+        .step-dot.done {
+            color: #0d7c3f !important;
+        }
+        .btn-primary {
+            background: #0d7c3f !important;
+        }
+        .btn-primary:hover {
+            background: #065f2e !important;
+            box-shadow: 0 6px 18px rgba(13, 124, 63, 0.25) !important;
+        }
+        .btn-success {
+            background: #0d7c3f !important;
+        }
+        .btn-success:hover {
+            background: #065f2e !important;
+            box-shadow: 0 6px 18px rgba(13, 124, 63, 0.25) !important;
+        }
+        .btn-outline {
+            border-color: #0d7c3f !important;
+            color: #0d7c3f !important;
+        }
+        .btn-outline:hover {
+            background: #0d7c3f !important;
+            color: #fff !important;
+        }
+        .form-group label {
+            color: #065f46 !important;
+        }
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            border-color: #0d7c3f !important;
+            box-shadow: 0 0 0 3px rgba(13, 124, 63, 0.12) !important;
+        }
+        .report-content h2 {
+            color: #065f46 !important;
+            border-bottom-color: #d1fae5 !important;
+        }
+        .report-content h3 {
+            color: #0d7c3f !important;
+        }
+        .report-content table th {
+            background: #0d7c3f !important;
+        }
+        .stats-box .stat-item .value {
+            color: #065f46 !important;
+        }
+        .stats-box .stat-item .value.highlight {
+            color: #0d7c3f !important;
+        }
+        .card h4 {
+            color: #065f46 !important;
+        }
+        .chart-container .chart-title {
+            color: #065f46 !important;
+        }
+        .chart-interp {
+            border-left-color: #0d7c3f !important;
+        }
+        .report-toolbar .title {
+            color: #065f46 !important;
+        }
+        #reportSection {
+            border-top-color: #0d7c3f !important;
+        }
+        .step-indicators {
+            border-color: #d1fae5 !important;
+            background: #f0fdf4 !important;
+        }
+
+        /* ----- INNOVATOR BADGE ----- */
+        .innovator-badge {
+            text-align: center;
+            font-size: 13px;
+            color: #065f46;
+            background: #f0fdf4;
+            padding: 8px 16px;
+            border-radius: 40px;
+            border: 1px solid #a7f3d0;
+            display: inline-block;
+            font-weight: 500;
+            margin-top: 6px;
+        }
+        .innovator-badge strong {
+            color: #0d7c3f;
+        }
+        .innovator-badge .ai-badge {
+            background: #0d7c3f;
+            color: #fff;
+            padding: 1px 12px;
+            border-radius: 40px;
+            font-size: 11px;
+            font-weight: 700;
+            margin-left: 6px;
+            letter-spacing: 0.3px;
+            display: inline-block;
+        }
+        .footer-attribution {
+            text-align: center;
+            padding: 16px 0 4px 0;
+            border-top: 1px solid #d1fae5;
+            margin-top: 30px;
+            font-size: 13px;
+            color: #065f46;
+        }
+        .footer-attribution strong {
+            color: #0d7c3f;
+        }
+
+        /* ----- SUBSCRIPTION OVERLAY ----- */
+        #subscriptionOverlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(6px);
+            z-index: 9999;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        #subscriptionOverlay.active {
+            display: flex;
+        }
+        .sub-modal {
+            background: #fff;
+            border-radius: 24px;
+            max-width: 520px;
+            width: 100%;
+            padding: 40px 36px;
+            box-shadow: 0 30px 80px rgba(0, 0, 0, 0.25);
+            animation: fadeUp 0.4s ease;
+            position: relative;
+            border: 1px solid #d1fae5;
+        }
+        .sub-modal .lock-icon {
+            font-size: 48px;
+            text-align: center;
+            margin-bottom: 8px;
+        }
+        .sub-modal h2 {
+            color: #065f46;
+            font-size: 22px;
+            text-align: center;
+            margin-bottom: 6px;
+        }
+        .sub-modal p {
+            color: #475569;
+            font-size: 14px;
+            text-align: center;
+            margin-bottom: 16px;
+        }
+        .sub-modal .gcash-box {
+            background: #f0fdf4;
+            border: 1px solid #a7f3d0;
+            border-radius: 12px;
+            padding: 14px 18px;
+            margin: 12px 0 16px 0;
+            text-align: center;
+        }
+        .sub-modal .gcash-box .number {
+            font-size: 20px;
+            font-weight: 700;
+            color: #065f46;
+            letter-spacing: 1px;
+        }
+        .sub-modal .gcash-box .admin-name {
+            font-weight: 600;
+            color: #0d7c3f;
+            font-size: 15px;
+        }
+        .sub-modal .gcash-box .price {
+            font-size: 24px;
+            font-weight: 800;
+            color: #0d7c3f;
+            margin: 4px 0;
+        }
+        .sub-modal .gcash-box .label {
+            font-size: 12px;
+            color: #64748b;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .sub-modal .code-input-group {
+            display: flex;
+            gap: 10px;
+            margin: 16px 0 10px 0;
+        }
+        .sub-modal .code-input-group input {
+            flex: 1;
+            padding: 12px 16px;
+            border: 2px solid #d1fae5;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            background: #fafdfb;
+            transition: 0.2s;
+            font-family: 'Courier New', monospace;
+        }
+        .sub-modal .code-input-group input:focus {
+            border-color: #0d7c3f;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(13, 124, 63, 0.15);
+        }
+        .sub-modal .code-input-group button {
+            padding: 12px 28px;
+            background: #0d7c3f;
+            color: #fff;
+            border: none;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 15px;
+            cursor: pointer;
+            transition: 0.2s;
+            white-space: nowrap;
+        }
+        .sub-modal .code-input-group button:hover {
+            background: #065f2e;
+            transform: translateY(-1px);
+        }
+        .sub-modal .code-input-group button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .sub-modal .sub-error {
+            color: #dc2626;
+            font-size: 13px;
+            text-align: center;
+            min-height: 22px;
+            font-weight: 500;
+        }
+        .sub-modal .sub-success {
+            color: #0d7c3f;
+            font-size: 13px;
+            text-align: center;
+            min-height: 22px;
+            font-weight: 500;
+        }
+        .sub-modal .valid-until {
+            text-align: center;
+            font-size: 13px;
+            color: #64748b;
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid #f1f5f9;
+        }
+        .sub-modal .valid-until strong {
+            color: #0d7c3f;
+        }
+        .sub-modal .dismiss-btn {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            border: none;
+            background: transparent;
+            color: #94a3b8;
+            font-size: 13px;
+            cursor: pointer;
+            margin-top: 4px;
+            font-weight: 500;
+        }
+        .sub-modal .dismiss-btn:hover {
+            color: #475569;
+        }
+
+        /* ----- REST OF STYLES (from original, adapted) ----- */
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px 30px;
+        }
+        .form-grid.three {
+            grid-template-columns: 1fr 1fr 1fr;
+        }
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        .form-group.full {
+            grid-column: 1 / -1;
+        }
+        .form-group label {
+            font-weight: 600;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .form-group label .optional {
+            font-weight: 400;
+            color: #94a3b8;
+            font-size: 12px;
+        }
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            padding: 10px 14px;
+            border: 1.5px solid #d1d9e6;
+            border-radius: 10px;
+            font-size: 15px;
+            background: #fcfcfd;
+            transition: 0.2s;
+            font-family: inherit;
+        }
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            border-color: #0d7c3f;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(13, 124, 63, 0.12);
+            background: #fff;
+        }
+        .form-group textarea {
+            resize: vertical;
+            min-height: 70px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+        }
+        .form-group .hint {
+            font-size: 12px;
+            color: #64748b;
+            margin-top: 3px;
+        }
+
+        .item-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 10px;
+            margin-top: 8px;
+            max-height: 400px;
+            overflow-y: auto;
+            padding: 4px 2px 10px 2px;
+        }
+        .item-grid .item-input {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: #f8fafc;
+            padding: 4px 10px 4px 14px;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+        }
+        .item-grid .item-input label {
+            font-weight: 600;
+            font-size: 13px;
+            color: #1e293b;
+            min-width: 28px;
+        }
+        .item-grid .item-input input {
+            width: 100%;
+            padding: 6px 8px;
+            border: none;
+            background: transparent;
+            font-size: 14px;
+            text-align: center;
+            font-weight: 500;
+        }
+        .item-grid .item-input input:focus {
+            outline: none;
+            background: #fff;
+            border-radius: 6px;
+            box-shadow: 0 0 0 2px rgba(13, 124, 63, 0.2);
+        }
+
+        .comp-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 8px;
+            margin-top: 8px;
+            max-height: 350px;
+            overflow-y: auto;
+            padding: 4px 2px 10px 2px;
+        }
+        .comp-grid .comp-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: #f8fafc;
+            padding: 4px 10px 4px 14px;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+        }
+        .comp-grid .comp-item label {
+            font-weight: 600;
+            font-size: 13px;
+            color: #1e293b;
+            min-width: 28px;
+        }
+        .comp-grid .comp-item input {
+            flex: 1;
+            padding: 6px 8px;
+            border: none;
+            background: transparent;
+            font-size: 13px;
+            min-width: 80px;
+        }
+        .comp-grid .comp-item input:focus {
+            outline: none;
+            background: #fff;
+            border-radius: 6px;
+            box-shadow: 0 0 0 2px rgba(13, 124, 63, 0.2);
+        }
+
+        .btn-row {
+            display: flex;
+            gap: 14px;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            margin-top: 28px;
+            padding-top: 20px;
+            border-top: 1px solid #e2e8f0;
+        }
+        .btn-row.center {
+            justify-content: center;
+        }
+        .btn {
+            padding: 11px 32px;
+            border: none;
+            border-radius: 40px;
+            font-weight: 600;
+            font-size: 15px;
+            cursor: pointer;
+            transition: 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: #e2e8f0;
+            color: #1e293b;
+        }
+        .btn-primary {
+            background: #0d7c3f;
+            color: #fff;
+        }
+        .btn-primary:hover {
+            background: #065f2e;
+            transform: translateY(-1px);
+            box-shadow: 0 6px 18px rgba(13, 124, 63, 0.25);
+        }
+        .btn-success {
+            background: #0d7c3f;
+            color: #fff;
+        }
+        .btn-success:hover {
+            background: #065f2e;
+            transform: translateY(-1px);
+            box-shadow: 0 6px 18px rgba(13, 124, 63, 0.25);
+        }
+        .btn-outline {
+            background: transparent;
+            border: 2px solid #0d7c3f;
+            color: #0d7c3f;
+        }
+        .btn-outline:hover {
+            background: #0d7c3f;
+            color: #fff;
+        }
+        .btn-warning {
+            background: #b45309;
+            color: #fff;
+        }
+        .btn-warning:hover {
+            background: #92400e;
+        }
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none !important;
+            box-shadow: none !important;
+        }
+
+        /* ----- REPORT SECTION ----- */
+        #reportSection {
+            display: none;
+            margin-top: 40px;
+            padding-top: 30px;
+            border-top: 3px solid #0d7c3f;
+        }
+        #reportSection.visible {
+            display: block;
+        }
+
+        .report-toolbar {
+            display: flex;
+            gap: 14px;
+            flex-wrap: wrap;
+            margin-bottom: 30px;
+            justify-content: space-between;
+            align-items: center;
+            background: #f8fafc;
+            padding: 14px 20px;
+            border-radius: 14px;
+            border: 1px solid #e2e8f0;
+        }
+        .report-toolbar .title {
+            font-weight: 700;
+            font-size: 18px;
+            color: #065f46;
+        }
+
+        .report-content {
+            font-size: 14px;
+            color: #1e293b;
+        }
+        .report-content h2 {
+            font-size: 20px;
+            color: #065f46;
+            margin: 30px 0 14px 0;
+            padding-bottom: 6px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+        .report-content h3 {
+            font-size: 17px;
+            color: #0d7c3f;
+            margin: 22px 0 10px 0;
+        }
+        .report-content h4 {
+            font-size: 15px;
+            color: #1e293b;
+            margin: 16px 0 8px 0;
+        }
+        .report-content table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 12px 0 20px 0;
+            font-size: 13px;
+        }
+        .report-content table th {
+            background: #0d7c3f;
+            color: #fff;
+            padding: 10px 12px;
+            text-align: left;
+            font-weight: 600;
+        }
+        .report-content table td {
+            padding: 8px 12px;
+            border-bottom: 1px solid #e2e8f0;
+            vertical-align: top;
+        }
+        .report-content table tr:nth-child(even) td {
+            background: #f8fafc;
+        }
+        .report-content table tr:hover td {
+            background: #f1f5f9;
+        }
+
+        .stats-box {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 14px;
+            background: #f8fafc;
+            padding: 18px 20px;
+            border-radius: 14px;
+            border: 1px solid #e2e8f0;
+            margin: 12px 0 20px 0;
+        }
+        .stats-box .stat-item {
+            text-align: center;
+        }
+        .stats-box .stat-item .label {
+            font-size: 12px;
+            font-weight: 600;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+        .stats-box .stat-item .value {
+            font-size: 22px;
+            font-weight: 700;
+            color: #065f46;
+            margin-top: 2px;
+        }
+        .stats-box .stat-item .value.highlight {
+            color: #0d7c3f;
+        }
+        .stats-box .stat-item .value.warning {
+            color: #b45309;
+        }
+        .stats-box .stat-item .sub {
+            font-size: 12px;
+            color: #64748b;
+        }
+
+        .card-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+            margin: 16px 0 24px 0;
+        }
+        .card {
+            background: #f8fafc;
+            border-radius: 14px;
+            border: 1px solid #e2e8f0;
+            padding: 16px 20px;
+        }
+        .card h4 {
+            margin-top: 0;
+            color: #065f46;
+            font-size: 15px;
+            border-bottom: 1px solid #e2e8f0;
+            padding-bottom: 6px;
+        }
+        .card ul {
+            list-style: none;
+            padding: 0;
+            margin: 8px 0 0 0;
+        }
+        .card ul li {
+            padding: 4px 0;
+            border-bottom: 1px solid #f1f5f9;
+            font-size: 13px;
+            display: flex;
+            justify-content: space-between;
+        }
+        .card ul li:last-child {
+            border-bottom: none;
+        }
+
+        .badge-mastery {
+            display: inline-block;
+            padding: 2px 12px;
+            border-radius: 40px;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+        .badge-mastery.most {
+            background: #d1fae5;
+            color: #065f46;
+        }
+        .badge-mastery.moderate {
+            background: #fef3c7;
+            color: #92400e;
+        }
+        .badge-mastery.least {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+        .badge-mastery.not {
+            background: #f1f5f9;
+            color: #475569;
+        }
+
+        .badge-diff {
+            display: inline-block;
+            padding: 2px 12px;
+            border-radius: 40px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+        .badge-diff.easy {
+            background: #d1fae5;
+            color: #065f46;
+        }
+        .badge-diff.average {
+            background: #fef3c7;
+            color: #92400e;
+        }
+        .badge-diff.difficult {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+        .badge-diff.very {
+            background: #f1f5f9;
+            color: #475569;
+        }
+
+        .chart-container {
+            background: #fff;
+            border-radius: 14px;
+            border: 1px solid #e2e8f0;
+            padding: 18px 16px 12px 16px;
+            margin: 16px 0 24px 0;
+            position: relative;
+        }
+        .chart-container .chart-title {
+            font-weight: 700;
+            font-size: 15px;
+            color: #065f46;
+            margin-bottom: 8px;
+            text-align: center;
+        }
+        .chart-container canvas {
+            max-height: 320px;
+            max-width: 100%;
+        }
+        .chart-interp {
+            font-size: 13px;
+            color: #475569;
+            background: #f1f5f9;
+            padding: 10px 16px;
+            border-radius: 10px;
+            margin-top: 10px;
+            border-left: 4px solid #0d7c3f;
+        }
+        .chart-interp strong {
+            color: #065f46;
+        }
+
+        .print-only {
+            display: none;
+        }
+
+        /* step panels */
+        .step-panel {
+            display: none;
+            animation: fadeUp 0.35s ease;
+        }
+        .step-panel.active {
+            display: block;
+        }
+        @keyframes fadeUp {
+            0% {
+                opacity: 0;
+                transform: translateY(14px);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        .step-indicators {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-bottom: 30px;
+            background: #f0fdf4;
+            padding: 12px 18px;
+            border-radius: 14px;
+            border: 1px solid #d1fae5;
+        }
+        .step-dot {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            color: #94a3b8;
+            padding: 4px 12px 4px 8px;
+            border-radius: 40px;
+            background: transparent;
+            transition: 0.2s;
+            cursor: default;
+        }
+        .step-dot.active {
+            background: #0d7c3f;
+            color: #fff;
+        }
+        .step-dot.done {
+            color: #0d7c3f;
+        }
+        .step-dot .num {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            background: #e2e8f0;
+            color: #475569;
+            font-weight: 700;
+            font-size: 13px;
+            transition: 0.2s;
+        }
+        .step-dot.active .num {
+            background: #ffffff;
+            color: #0d7c3f;
+        }
+        .step-dot.done .num {
+            background: #0d7c3f;
+            color: #fff;
+        }
+
+        .app-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 15px;
+            border-bottom: 3px solid #0d7c3f;
+            padding-bottom: 18px;
+            margin-bottom: 28px;
+        }
+        .app-header h1 {
+            font-size: 26px;
+            font-weight: 700;
+            color: #065f46;
+            letter-spacing: -0.3px;
+        }
+        .app-header h1 small {
+            font-size: 15px;
+            font-weight: 400;
+            color: #475569;
+            display: block;
+            margin-top: 2px;
+        }
+        .badge-deped {
+            background: #0d7c3f;
+            color: #fff;
+            padding: 6px 18px;
+            border-radius: 40px;
+            font-size: 13px;
+            font-weight: 600;
+            letter-spacing: 0.3px;
+            white-space: nowrap;
+        }
+
+        .text-center {
+            text-align: center;
+        }
+        .mt-8 {
+            margin-top: 8px;
+        }
+        .mt-16 {
+            margin-top: 16px;
+        }
+        .mb-8 {
+            margin-bottom: 8px;
+        }
+        .fw-700 {
+            font-weight: 700;
+        }
+        .color-muted {
+            color: #64748b;
+        }
+        .color-success {
+            color: #0d7c3f;
+        }
+        .color-danger {
+            color: #991b1b;
+        }
+        .color-warning {
+            color: #b45309;
+        }
+        .flex-between {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .gap-8 {
+            gap: 8px;
+        }
+        .gap-16 {
+            gap: 16px;
+        }
+        .table-wrap {
+            overflow-x: auto;
+        }
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #e2e8f0;
+            border-top-color: #0d7c3f;
+            border-radius: 50%;
+            animation: spin 0.7s linear infinite;
+            vertical-align: middle;
+            margin-right: 10px;
+        }
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        @media print {
+            body {
+                background: #fff;
+                padding: 0;
+            }
+            .container {
+                box-shadow: none;
+                border-radius: 0;
+                padding: 20px;
+            }
+            .step-indicators,
+            .btn-row,
+            .report-toolbar,
+            .no-print,
+            #subscriptionOverlay {
+                display: none !important;
+            }
+            .print-only {
+                display: block !important;
+            }
+            .report-content table th {
+                background: #0d7c3f !important;
+                color: #fff !important;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+            .report-content table tr:nth-child(even) td {
+                background: #f8fafc !important;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+            .stats-box .stat-item .value {
+                color: #065f46 !important;
+            }
+            .badge-mastery,
+            .badge-diff {
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+            .chart-container canvas {
+                max-height: 260px;
+            }
+            .card-grid {
+                grid-template-columns: 1fr 1fr;
+                break-inside: avoid;
+            }
+            .report-content h2 {
+                break-after: avoid;
+            }
+            .chart-container {
+                break-inside: avoid;
+                page-break-inside: avoid;
+            }
+            .report-content table {
+                font-size: 11px;
+            }
+            .report-content table td,
+            .report-content table th {
+                padding: 4px 8px;
+            }
+            .innovator-badge {
+                border-color: #d1fae5 !important;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+            .footer-attribution {
+                border-top-color: #d1fae5 !important;
+            }
+        }
+
+        @media (max-width: 700px) {
+            .container {
+                padding: 16px;
+            }
+            .form-grid,
+            .form-grid.three {
+                grid-template-columns: 1fr;
+            }
+            .card-grid {
+                grid-template-columns: 1fr;
+            }
+            .app-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            .step-dot span {
+                display: none;
+            }
+            .step-dot {
+                padding: 4px 8px;
+            }
+            .item-grid {
+                grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+            }
+            .comp-grid {
+                grid-template-columns: 1fr;
+            }
+            .stats-box {
+                grid-template-columns: 1fr 1fr;
+            }
+            .sub-modal {
+                padding: 28px 20px;
+            }
+            .sub-modal .code-input-group {
+                flex-direction: column;
+            }
+            .sub-modal .code-input-group button {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ===== SUBSCRIPTION OVERLAY ===== -->
+    <div id="subscriptionOverlay">
+        <div class="sub-modal">
+            <div class="lock-icon">🔒</div>
+            <h2>Assessment Generator Locked</h2>
+            <p>This tool requires a valid subscription to generate reports.</p>
+
+            <div class="gcash-box">
+                <div class="label">💳 Subscription Fee (3 months)</div>
+                <div class="price">₱200.00</div>
+                <div style="margin:6px 0 2px 0; font-size:13px; color:#475569;">Pay via GCash to:</div>
+                <div class="number">0935 836 0471</div>
+                <div class="admin-name">ME....O F.</div>
+                <div style="font-size:12px; color:#64748b; margin-top:4px;">(Administrator)</div>
+            </div>
+
+            <p style="font-size:13px; color:#475569;">After payment, enter the subscription code provided by the administrator.</p>
+
+            <div class="code-input-group">
+                <input type="text" id="subCodeInput" placeholder="Enter code e.g. SUB-XXXX-YYYY" maxlength="30" autocomplete="off" />
+                <button id="subUnlockBtn" onclick="validateSubscription()">Unlock</button>
+            </div>
+            <div id="subMessage" class="sub-error"></div>
+
+            <div class="valid-until" id="subValidUntil" style="display:none;">
+                ✅ Active until: <strong id="subExpiryDisplay"></strong>
+            </div>
+
+            <button class="dismiss-btn" onclick="closeSubscriptionOverlay()">Close</button>
+        </div>
+    </div>
+
+    <!-- ===== MAIN APP ===== -->
+    <div class="container" id="app">
+
+        <!-- HEADER -->
+        <header class="app-header">
+            <div>
+                <h1>🌿 Assessment Results &amp; Item Analysis <small>DepEd-Aligned Report Generator</small></h1>
+                <div class="innovator-badge">
+                    ⚡ Innovator: <strong>Melanio R. Florino Jr.</strong>
+                    <span class="ai-badge">Powered by Deepseek AI</span>
+                </div>
+            </div>
+            <div class="badge-deped">📋 v3.0 · Green Edition</div>
+        </header>
+
+        <!-- STEP INDICATORS -->
+        <div class="step-indicators no-print" id="stepIndicators">
+            <div class="step-dot active" data-step="1"><span class="num">1</span> <span>Assessment</span></div>
+            <div class="step-dot" data-step="2"><span class="num">2</span> <span>Learner Data</span></div>
+            <div class="step-dot" data-step="3"><span class="num">3</span> <span>Item Data</span></div>
+            <div class="step-dot" data-step="4"><span class="num">4</span> <span>Competencies</span></div>
+            <div class="step-dot" data-step="5"><span class="num">5</span> <span>Generate</span></div>
+        </div>
+
+        <!-- ===== STEP 1 ===== -->
+        <div class="step-panel active" id="step1">
+            <h2 style="font-size:20px; color:#065f46; margin-bottom:16px;">📋 Assessment Information</h2>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label>Assessment Title</label>
+                    <input type="text" id="assessmentTitle" placeholder="e.g. 3rd Quarter Summative Test" value="3rd Quarter Summative Test">
+                </div>
+                <div class="form-group">
+                    <label>Subject</label>
+                    <input type="text" id="subject" placeholder="e.g. Mathematics 8" value="Mathematics 8">
+                </div>
+                <div class="form-group">
+                    <label>Grade Level</label>
+                    <input type="text" id="gradeLevel" placeholder="e.g. Grade 8" value="Grade 8">
+                </div>
+                <div class="form-group">
+                    <label>Subject Teacher <span style="color:#dc2626; font-weight:700;">*</span></label>
+                    <input type="text" id="subjectTeacher" placeholder="e.g. Juan D. Dela Cruz" value="">
+                    <span class="hint">Enter your full name as the subject teacher.</span>
+                </div>
+                <div class="form-group">
+                    <label>Total Number of Learners</label>
+                    <input type="number" id="totalLearners" min="1" value="35" step="1">
+                </div>
+                <div class="form-group">
+                    <label>Total Number of Items</label>
+                    <input type="number" id="totalItems" min="1" value="25" step="1">
+                </div>
+                <div class="form-group">
+                    <label>Passing / Proficiency Benchmark (%)</label>
+                    <input type="number" id="benchmark" min="0" max="100" value="65" step="0.5">
+                    <span class="hint">Common: 65%, 75%, 80%</span>
+                </div>
+            </div>
+            <div class="btn-row">
+                <span></span>
+                <button class="btn btn-primary" onclick="goStep(2)">Next → Learner Data</button>
+            </div>
+        </div>
+
+        <!-- ===== STEP 2 ===== -->
+        <div class="step-panel" id="step2">
+            <h2 style="font-size:20px; color:#065f46; margin-bottom:16px;">👨‍🎓 Learner Performance Data</h2>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label>Highest Score <span class="optional">(optional)</span></label>
+                    <input type="number" id="highestScore" placeholder="e.g. 25" step="1">
+                </div>
+                <div class="form-group">
+                    <label>Lowest Score <span class="optional">(optional)</span></label>
+                    <input type="number" id="lowestScore" placeholder="e.g. 8" step="1">
+                </div>
+                <div class="form-group">
+                    <label># Learners Who Reached Benchmark &amp; Above</label>
+                    <input type="number" id="passedCount" placeholder="e.g. 18" value="18" step="1">
+                </div>
+                <div class="form-group">
+                    <label># Learners Below Benchmark</label>
+                    <input type="number" id="failedCount" placeholder="e.g. 17" value="17" step="1">
+                </div>
+                <div class="form-group full">
+                    <label>Individual Learner Scores <span class="optional">(optional – for Median &amp; Mode)</span></label>
+                    <textarea id="individualScores" rows="4" placeholder="One score per line, e.g.&#10;22&#10;19&#10;25&#10;14&#10;18">22
+                    19
+                    25
+                    14
+                    18
+                    20
+                    21
+                    16
+                    23
+                    24
+                    17
+                    15
+                    20
+                    22
+                    19
+                    21
+                    18
+                    16
+                    23
+                    20
+                    24
+                    17
+                    19
+                    21
+                    22
+                    18
+                    20
+                    23
+                    16
+                    19
+                    22
+                    20
+                    21
+                    17
+                    24</textarea>
+                    <span class="hint">Leave blank if not available. Median &amp; Mode will be computed from these.</span>
+                </div>
+            </div>
+            <div class="btn-row">
+                <button class="btn btn-outline" onclick="goStep(1)">← Back</button>
+                <button class="btn btn-primary" onclick="goStep(3)">Next → Item Data</button>
+            </div>
+        </div>
+
+        <!-- ===== STEP 3 ===== -->
+        <div class="step-panel" id="step3">
+            <h2 style="font-size:20px; color:#065f46; margin-bottom:16px;">📝 Item Data</h2>
+            <p style="color:#475569; margin-bottom:10px;">Enter the number of learners who got each item correct.</p>
+            <div id="itemInputs" class="item-grid">
+                <!-- dynamically generated -->
+            </div>
+            <div class="btn-row">
+                <button class="btn btn-outline" onclick="goStep(2)">← Back</button>
+                <button class="btn btn-primary" onclick="goStep(4)">Next → Competencies</button>
+            </div>
+        </div>
+
+        <!-- ===== STEP 4 ===== -->
+        <div class="step-panel" id="step4">
+            <h2 style="font-size:20px; color:#065f46; margin-bottom:16px;">📎 Competency Mapping <span class="optional">(optional)</span></h2>
+            <p style="color:#475569; margin-bottom:8px;">Assign each item to a learning competency. If left blank, competency analysis will be skipped.</p>
+            <div id="compInputs" class="comp-grid">
+                <!-- dynamically generated -->
+            </div>
+            <div class="btn-row">
+                <button class="btn btn-outline" onclick="goStep(3)">← Back</button>
+                <button class="btn btn-success" onclick="generateReport()">🚀 Generate Report</button>
+            </div>
+        </div>
+
+        <!-- ===== STEP 5 ===== -->
+        <div class="step-panel" id="step5">
+            <div class="text-center" style="padding:30px 0;">
+                <div style="font-size:48px; margin-bottom:12px;">📄</div>
+                <h3 style="color:#065f46;">Ready to Generate!</h3>
+                <p style="color:#475569;">Review your data and click the button below.</p>
+                <button class="btn btn-success" style="margin-top:16px; font-size:18px; padding:14px 48px;" onclick="generateReport()">📊 Generate Full Report</button>
+                <div style="margin-top:20px;">
+                    <button class="btn btn-outline" onclick="goStep(4)">← Back to Competencies</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== REPORT SECTION ===== -->
+        <div id="reportSection">
+            <div class="report-toolbar no-print">
+                <span class="title">📄 Assessment Report</span>
+                <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                    <button class="btn btn-primary" onclick="window.print()">🖨️ Print / PDF</button>
+                    <button class="btn btn-outline" onclick="resetAll()">🔄 New Report</button>
+                </div>
+            </div>
+            <div class="report-content" id="reportContent">
+                <!-- filled by JS -->
+            </div>
+        </div>
+
+        <!-- footer attribution -->
+        <div class="footer-attribution no-print">
+            🌿 Innovator: <strong>Melanio R. Florino Jr.</strong> &nbsp;·&nbsp;
+            <span class="ai-badge" style="background:#0d7c3f;color:#fff;padding:1px 12px;border-radius:40px;font-size:11px;font-weight:700;letter-spacing:0.3px;display:inline-block;">Powered by Deepseek AI</span>
+            &nbsp;·&nbsp; v3.0 Green Edition
+        </div>
+
+        <!-- hidden print watermark -->
+        <div class="print-only" style="text-align:center; margin-top:30px; font-size:12px; color:#94a3b8; border-top:1px solid #e2e8f0; padding-top:12px;">
+            Generated by Assessment Results &amp; Item Analysis Tool · DepEd-Aligned · Innovator: Melanio R. Florino Jr. · Powered by Deepseek AI
+        </div>
+    </div>
+
+    <script>
+        // ============================================================
+        //  SUBSCRIPTION SYSTEM
+        // ============================================================
+        const SUBSCRIPTION_KEY = 'assessment_subscription_data';
+        const CODES_STORAGE_KEY = 'subscription_codes_data';
+
+        // ----- Check subscription status -----
+        function checkSubscriptionStatus() {
+            const stored = localStorage.getItem(SUBSCRIPTION_KEY);
+            if (!stored) return null;
+            try {
+                const data = JSON.parse(stored);
+                const expiry = new Date(data.expiry);
+                if (new Date() < expiry) {
+                    return data;
+                } else {
+                    // expired
+                    localStorage.removeItem(SUBSCRIPTION_KEY);
+                    return null;
+                }
+            } catch {
+                return null;
+            }
+        }
+
+        // ----- Show overlay if not subscribed -----
+        function ensureSubscription() {
+            const sub = checkSubscriptionStatus();
+            if (sub) {
+                // show valid until in overlay
+                const overlay = document.getElementById('subscriptionOverlay');
+                const validUntil = document.getElementById('subValidUntil');
+                const expiryDisplay = document.getElementById('subExpiryDisplay');
+                const expiryDate = new Date(sub.expiry);
+                expiryDisplay.textContent = expiryDate.toLocaleDateString('en-PH', { year: 'numeric', month: 'long',
+                    day: 'numeric' });
+                validUntil.style.display = 'block';
+                // hide overlay if already active
+                overlay.classList.remove('active');
+                return true;
+            } else {
+                // show overlay
+                const overlay = document.getElementById('subscriptionOverlay');
+                const validUntil = document.getElementById('subValidUntil');
+                validUntil.style.display = 'none';
+                overlay.classList.add('active');
+                return false;
+            }
+        }
+
+        // ----- Close overlay -----
+        function closeSubscriptionOverlay() {
+            // only allow close if subscribed
+            const sub = checkSubscriptionStatus();
+            if (sub) {
+                document.getElementById('subscriptionOverlay').classList.remove('active');
+            } else {
+                // if not subscribed, keep it open but allow minimal interaction
+                // we'll keep it open
+            }
+        }
+
+        // ----- Validate subscription code -----
+        function validateSubscription() {
+            const input = document.getElementById('subCodeInput');
+            const code = input.value.trim().toUpperCase();
+            const msgEl = document.getElementById('subMessage');
+
+            if (!code) {
+                msgEl.textContent = 'Please enter a subscription code.';
+                msgEl.className = 'sub-error';
+                return;
+            }
+
+            // check against stored codes
+            const codesData = localStorage.getItem(CODES_STORAGE_KEY);
+            if (!codesData) {
+                msgEl.textContent = 'Invalid code. Please contact the administrator.';
+                msgEl.className = 'sub-error';
+                return;
+            }
+
+            try {
+                const codes = JSON.parse(codesData);
+                if (codes[code]) {
+                    const entry = codes[code];
+                    const expiry = new Date(entry.expiry);
+                    if (new Date() < expiry) {
+                        // valid!
+                        // store subscription
+                        localStorage.setItem(SUBSCRIPTION_KEY, JSON.stringify({
+                            code: code,
+                            expiry: entry.expiry,
+                            activatedAt: new Date().toISOString()
+                        }));
+                        msgEl.textContent = '✅ Subscription activated successfully!';
+                        msgEl.className = 'sub-success';
+                        // update overlay
+                        const validUntil = document.getElementById('subValidUntil');
+                        const expiryDisplay = document.getElementById('subExpiryDisplay');
+                        expiryDisplay.textContent = new Date(entry.expiry).toLocaleDateString('en-PH', { year: 'numeric',
+                            month: 'long', day: 'numeric' });
+                        validUntil.style.display = 'block';
+                        // close after a moment
+                        setTimeout(() => {
+                            document.getElementById('subscriptionOverlay').classList.remove('active');
+                            // re-enable generate
+                        }, 800);
+                    } else {
+                        msgEl.textContent = 'This code has expired. Please purchase a new subscription.';
+                        msgEl.className = 'sub-error';
+                    }
+                } else {
+                    msgEl.textContent = 'Invalid code. Please contact the administrator.';
+                    msgEl.className = 'sub-error';
+                }
+            } catch {
+                msgEl.textContent = 'Error validating code. Please try again.';
+                msgEl.className = 'sub-error';
+            }
+        }
+
+        // ----- Enter key on code input -----
+        document.addEventListener('DOMContentLoaded', function() {
+            const input = document.getElementById('subCodeInput');
+            if (input) {
+                input.addEventListener('keydown', function(e) {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        validateSubscription();
+                    }
+                });
+            }
+        });
+
+        // ============================================================
+        //  GLOBALS
+        // ============================================================
+        let chartInstances = {};
+
+        // ============================================================
+        //  STEP NAVIGATION
+        // ============================================================
+        function goStep(n) {
+            // hide all panels
+            document.querySelectorAll('.step-panel').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.step-dot').forEach(el => el.classList.remove('active', 'done'));
+
+            const panel = document.getElementById('step' + n);
+            if (panel) panel.classList.add('active');
+
+            const dots = document.querySelectorAll('.step-dot');
+            dots.forEach((dot, idx) => {
+                const stepNum = idx + 1;
+                if (stepNum === n) dot.classList.add('active');
+                else if (stepNum < n) dot.classList.add('done');
+            });
+
+            if (n === 3) populateItemInputs();
+            if (n === 4) populateCompInputs();
+
+            document.querySelector('.container').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        // ============================================================
+        //  POPULATE ITEM INPUTS
+        // ============================================================
+        function populateItemInputs() {
+            const total = parseInt(document.getElementById('totalItems').value) || 25;
+            const container = document.getElementById('itemInputs');
+            const existing = {};
+            container.querySelectorAll('input').forEach(inp => {
+                const key = inp.dataset.item;
+                if (key) existing[key] = inp.value;
+            });
+            let html = '';
+            for (let i = 1; i <= total; i++) {
+                const val = existing[i] || '';
+                html += `
+                        <div class="item-input">
+                            <label>#${i}</label>
+                            <input type="number" id="item_${i}" data-item="${i}" min="0" max="${document.getElementById('totalLearners').value || 100}" value="${val}" placeholder="correct">
+                        </div>
+                    `;
+            }
+            container.innerHTML = html;
+        }
+
+        // ============================================================
+        //  POPULATE COMPETENCY INPUTS
+        // ============================================================
+        function populateCompInputs() {
+            const total = parseInt(document.getElementById('totalItems').value) || 25;
+            const container = document.getElementById('compInputs');
+            const existing = {};
+            container.querySelectorAll('input').forEach(inp => {
+                const key = inp.dataset.item;
+                if (key) existing[key] = inp.value;
+            });
+            let html = '';
+            for (let i = 1; i <= total; i++) {
+                const val = existing[i] || '';
+                html += `
+                        <div class="comp-item">
+                            <label>#${i}</label>
+                            <input type="text" id="comp_${i}" data-item="${i}" value="${val}" placeholder="Competency name">
+                        </div>
+                    `;
+            }
+            container.innerHTML = html;
+        }
+
+        // ============================================================
+        //  GENERATE REPORT (with subscription check)
+        // ============================================================
+        function generateReport() {
+            // ---- Check subscription ----
+            const sub = checkSubscriptionStatus();
+            if (!sub) {
+                // show overlay
+                const overlay = document.getElementById('subscriptionOverlay');
+                const validUntil = document.getElementById('subValidUntil');
+                validUntil.style.display = 'none';
+                overlay.classList.add('active');
+                // focus the input
+                document.getElementById('subCodeInput').focus();
+                return;
+            }
+
+            // ---- Teacher name validation ----
+            const teacherName = document.getElementById('subjectTeacher').value.trim();
+            if (!teacherName) {
+                alert('Please enter the Subject Teacher\'s full name in the Assessment Information section.');
+                goStep(1);
+                document.getElementById('subjectTeacher').focus();
+                return;
+            }
+
+            // ---- gather data ----
+            const title = document.getElementById('assessmentTitle').value.trim() || 'Untitled Assessment';
+            const subject = document.getElementById('subject').value.trim() || 'N/A';
+            const grade = document.getElementById('gradeLevel').value.trim() || 'N/A';
+            const totalLearners = parseInt(document.getElementById('totalLearners').value) || 0;
+            const totalItems = parseInt(document.getElementById('totalItems').value) || 0;
+            const benchmarkPct = parseFloat(document.getElementById('benchmark').value) || 65;
+            const highest = document.getElementById('highestScore').value.trim() !== '' ? parseInt(document.getElementById(
+                'highestScore').value) : null;
+            const lowest = document.getElementById('lowestScore').value.trim() !== '' ? parseInt(document.getElementById(
+                'lowestScore').value) : null;
+            const passed = parseInt(document.getElementById('passedCount').value) || 0;
+            const failed = parseInt(document.getElementById('failedCount').value) || 0;
+
+            const scoresText = document.getElementById('individualScores').value;
+            const individualScores = scoresText.trim() !== '' ?
+                scoresText.split(/\n+/).map(s => parseInt(s.trim())).filter(n => !isNaN(n)) :
+                [];
+
+            const itemCorrects = [];
+            for (let i = 1; i <= totalItems; i++) {
+                const el = document.getElementById('item_' + i);
+                const val = el ? parseInt(el.value) : 0;
+                itemCorrects.push(isNaN(val) ? 0 : val);
+            }
+
+            const compMap = {};
+            for (let i = 1; i <= totalItems; i++) {
+                const el = document.getElementById('comp_' + i);
+                if (el && el.value.trim() !== '') {
+                    compMap[i] = el.value.trim();
+                }
+            }
+
+            // ---- validation ----
+            if (totalLearners <= 0 || totalItems <= 0) {
+                alert('Please enter valid Total Learners and Total Items.');
+                return;
+            }
+            if (itemCorrects.some(v => v < 0 || v > totalLearners)) {
+                alert('Item correct counts must be between 0 and total learners.');
+                return;
+            }
+            if (passed + failed !== totalLearners) {
+                if (passed + failed > 0) {
+                    if (!confirm(`Passed (${passed}) + Failed (${failed}) = ${passed+failed}, but total learners is ${totalLearners}. Continue anyway?`))
+                        return;
+                }
+            }
+
+            // ---- compute ----
+            const benchmarkRaw = Math.ceil(totalItems * (benchmarkPct / 100));
+            const totalCorrect = itemCorrects.reduce((a, b) => a + b, 0);
+            const totalPossible = totalLearners * totalItems;
+            const mps = totalPossible > 0 ? (totalCorrect / totalPossible) * 100 : 0;
+            const meanScore = totalLearners > 0 ? totalCorrect / totalLearners : 0;
+
+            let meanFromIndiv = null;
+            if (individualScores.length > 0) {
+                meanFromIndiv = individualScores.reduce((a, b) => a + b, 0) / individualScores.length;
+            }
+
+            let median = null,
+                mode = null;
+            if (individualScores.length > 0) {
+                const sorted = [...individualScores].sort((a, b) => a - b);
+                const mid = Math.floor(sorted.length / 2);
+                median = sorted.length % 2 === 0 ? (sorted[mid - 1] + sorted[mid]) / 2 : sorted[mid];
+                const freq = {};
+                sorted.forEach(v => freq[v] = (freq[v] || 0) + 1);
+                let maxFreq = 0;
+                for (const k in freq) {
+                    if (freq[k] > maxFreq) { maxFreq = freq[k];
+                        mode = parseInt(k); }
+                }
+                if (maxFreq === 1) mode = null;
+            }
+
+            let finalHighest = highest;
+            let finalLowest = lowest;
+            if (individualScores.length > 0) {
+                const maxIndiv = Math.max(...individualScores);
+                const minIndiv = Math.min(...individualScores);
+                if (finalHighest === null || finalHighest < maxIndiv) finalHighest = maxIndiv;
+                if (finalLowest === null || finalLowest > minIndiv) finalLowest = minIndiv;
+            }
+
+            const itemAnalysis = itemCorrects.map((correct, idx) => {
+                const itemNum = idx + 1;
+                const pct = totalLearners > 0 ? (correct / totalLearners) * 100 : 0;
+                let difficulty = '';
+                let mastery = '';
+                if (pct >= 80) { difficulty = 'Easy';
+                    mastery = 'Most Mastered'; } else if (pct >= 60) { difficulty = 'Average';
+                    mastery = 'Moderately Mastered'; } else if (pct >= 40) { difficulty = 'Difficult';
+                    mastery = 'Least Mastered'; } else { difficulty = 'Very Difficult';
+                    mastery = 'Not Mastered'; }
+                const comp = compMap[itemNum] || 'Not mapped';
+                return { itemNum, correct, total: totalLearners, pct, difficulty, mastery, comp };
+            });
+
+            const compGroups = {};
+            for (const [itemNum, compName] of Object.entries(compMap)) {
+                const idx = parseInt(itemNum) - 1;
+                if (idx >= 0 && idx < itemAnalysis.length) {
+                    if (!compGroups[compName]) compGroups[compName] = [];
+                    compGroups[compName].push(itemAnalysis[idx]);
+                }
+            }
+
+            const compResults = [];
+            for (const [compName, items] of Object.entries(compGroups)) {
+                const totalPct = items.reduce((s, it) => s + it.pct, 0);
+                const avgPct = items.length > 0 ? totalPct / items.length : 0;
+                let mastery = '';
+                if (avgPct >= 80) mastery = 'Most Mastered';
+                else if (avgPct >= 60) mastery = 'Moderately Mastered';
+                else if (avgPct >= 40) mastery = 'Least Mastered';
+                else mastery = 'Not Mastered';
+                compResults.push({
+                    comp: compName,
+                    items: items.map(it => it.itemNum),
+                    avgPct,
+                    mastery,
+                    totalCorrect: items.reduce((s, it) => s + it.correct, 0),
+                    totalPossible: items.length * totalLearners,
+                });
+            }
+            compResults.sort((a, b) => a.avgPct - b.avgPct);
+
+            const sortedItems = [...itemAnalysis].sort((a, b) => a.pct - b.pct);
+            const leastItems = sortedItems.filter(it => it.pct < 60);
+            const mostItems = sortedItems.filter(it => it.pct >= 80);
+
+            // ---- render report ----
+            renderReport({
+                title,
+                subject,
+                grade,
+                teacherName,
+                totalLearners,
+                totalItems,
+                benchmarkPct,
+                benchmarkRaw,
+                highest: finalHighest,
+                lowest: finalLowest,
+                meanScore: meanFromIndiv !== null ? meanFromIndiv : meanScore,
+                median,
+                mode,
+                mps,
+                passed,
+                failed,
+                itemAnalysis,
+                compResults,
+                leastItems,
+                mostItems,
+                individualScores,
+                compMap,
+                totalCorrect,
+                totalPossible,
+            });
+
+            const reportSection = document.getElementById('reportSection');
+            reportSection.classList.add('visible');
+            reportSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+            goStep(5);
+
+            setTimeout(() => {
+                renderCharts(itemAnalysis, compResults, passed, failed, totalLearners, {
+                    highest: finalHighest,
+                    lowest: finalLowest,
+                    mean: meanFromIndiv !== null ? meanFromIndiv : meanScore,
+                    median,
+                    mode,
+                    mps
+                });
+            }, 300);
+        }
+
+        // ============================================================
+        //  RENDER REPORT
+        // ============================================================
+        function renderReport(data) {
+            const el = document.getElementById('reportContent');
+            const {
+                title,
+                subject,
+                grade,
+                teacherName,
+                totalLearners,
+                totalItems,
+                benchmarkPct,
+                benchmarkRaw,
+                highest,
+                lowest,
+                meanScore,
+                median,
+                mode,
+                mps,
+                passed,
+                failed,
+                itemAnalysis,
+                compResults,
+                leastItems,
+                mostItems,
+                individualScores,
+                compMap
+            } = data;
+
+            const hasIndiv = individualScores.length > 0;
+            const hasComp = Object.keys(compMap).length > 0;
+
+            const pct = (v) => v.toFixed(2);
+            const badge = (pctVal) => {
+                if (pctVal >= 80) return '<span class="badge-mastery most">Most Mastered</span>';
+                if (pctVal >= 60) return '<span class="badge-mastery moderate">Moderately Mastered</span>';
+                if (pctVal >= 40) return '<span class="badge-mastery least">Least Mastered</span>';
+                return '<span class="badge-mastery not">Not Mastered</span>';
+            };
+            const diffBadge = (diff) => {
+                const map = { 'Easy': 'easy', 'Average': 'average', 'Difficult': 'difficult', 'Very Difficult': 'very' };
+                return `<span class="badge-diff ${map[diff] || 'average'}">${diff}</span>`;
+            };
+
+            let html = '';
+
+            // ---- Header with teacher ----
+            html += `
+                        <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:10px; background:#f0fdf4; padding:14px 20px; border-radius:14px; border:1px solid #d1fae5; margin-bottom:20px;">
+                            <div>
+                                <div style="font-weight:700; font-size:18px; color:#065f46;">${title}</div>
+                                <div style="font-size:14px; color:#475569;">${subject} · ${grade}</div>
+                            </div>
+                            <div style="text-align:right; font-size:14px; color:#065f46;">
+                                <div><strong>Subject Teacher:</strong> ${teacherName}</div>
+                                <div style="font-size:12px; color:#64748b;">Generated: ${new Date().toLocaleDateString('en-PH', { year:'numeric', month:'long', day:'numeric' })}</div>
+                            </div>
+                        </div>
+                    `;
+
+            // ---- PART I - SUMMARY ----
+            html += `<h2>PART I – SUMMARY OF LEARNER PERFORMANCE</h2>`;
+            html += `
+                        <div style="display:grid; grid-template-columns:1fr 1fr; gap:6px 30px; background:#f8fafc; padding:16px 20px; border-radius:14px; border:1px solid #e2e8f0; margin-bottom:16px;">
+                            <div><strong>Assessment Title:</strong> ${title}</div>
+                            <div><strong>Subject:</strong> ${subject}</div>
+                            <div><strong>Grade Level:</strong> ${grade}</div>
+                            <div><strong>Subject Teacher:</strong> ${teacherName}</div>
+                            <div><strong>Total Learners:</strong> ${totalLearners}</div>
+                            <div><strong>Total Items:</strong> ${totalItems}</div>
+                            <div><strong>Benchmark:</strong> ${benchmarkPct}%</div>
+                            <div><strong>Raw Score Equivalent:</strong> ${benchmarkRaw} (≥ ${benchmarkRaw})</div>
+                            <div><strong>Highest Score:</strong> ${highest !== null ? highest : 'N/A'}</div>
+                            <div><strong>Lowest Score:</strong> ${lowest !== null ? lowest : 'N/A'}</div>
+                            <div><strong>Mean Score:</strong> ${meanScore !== null ? meanScore.toFixed(2) : 'N/A'}</div>
+                            <div><strong>Median Score:</strong> ${median !== null ? median.toFixed(2) : 'Not available (no individual scores)'}</div>
+                            <div><strong>Mode Score:</strong> ${mode !== null ? mode : 'Not available (no unique mode or no individual scores)'}</div>
+                            <div><strong>MPS:</strong> ${pct(mps)}%</div>
+                            <div><strong>Passed (≥ benchmark):</strong> ${passed} (${totalLearners > 0 ? pct((passed/totalLearners)*100) : 0}%)</div>
+                            <div><strong>Failed (&lt; benchmark):</strong> ${failed} (${totalLearners > 0 ? pct((failed/totalLearners)*100) : 0}%)</div>
+                            <div style="grid-column:1/-1; margin-top:6px; font-weight:600; color:#065f46;">General Interpretation: ${passed/totalLearners >= 0.75 ? 'Satisfactory – majority met the benchmark.' : passed/totalLearners >= 0.50 ? 'Moderate – about half met the benchmark. Intervention needed.' : 'Needs Improvement – majority below benchmark. Intensive intervention required.'}</div>
+                        </div>
+                    `;
+
+            // ---- PART II - ITEM ANALYSIS ----
+            html += `<h2>PART II – ITEM ANALYSIS TABLE</h2>`;
+            html += `<div class="table-wrap"><table>
+                            <thead><tr><th>Item #</th><th># Correct</th><th>Total</th><th>% Correct</th><th>Difficulty</th><th>Mastery</th><th>Competency</th><th>Remarks</th></tr></thead>
+                            <tbody>`;
+            itemAnalysis.forEach(it => {
+                const remarks = it.pct >= 80 ? 'Well-mastered' :
+                    it.pct >= 60 ? 'Nearing mastery' :
+                    it.pct >= 40 ? 'Needs reinforcement' : 'Priority for remediation';
+                html += `<tr>
+                                <td><strong>${it.itemNum}</strong></td>
+                                <td>${it.correct}</td>
+                                <td>${it.total}</td>
+                                <td>${pct(it.pct)}%</td>
+                                <td>${diffBadge(it.difficulty)}</td>
+                                <td>${badge(it.pct)}</td>
+                                <td>${it.comp}</td>
+                                <td>${remarks}</td>
+                            </tr>`;
+            });
+            html += `</tbody></table></div>`;
+
+            // ---- PART III - LEAST MASTERED ----
+            html += `<h2>PART III – LEAST MASTERED ITEMS</h2>`;
+            if (leastItems.length === 0) {
+                html += `<p style="color:#0d7c3f;">✅ No least mastered items (all items ≥60% correct).</p>`;
+            } else {
+                html += `<div class="table-wrap"><table>
+                                <thead><tr><th>Item #</th><th>% Correct</th><th>Competency</th><th>Possible Misconception</th><th>Suggested Remediation</th></tr></thead>
+                                <tbody>`;
+                leastItems.forEach(it => {
+                    html += `<tr>
+                                    <td><strong>${it.itemNum}</strong></td>
+                                    <td>${pct(it.pct)}%</td>
+                                    <td>${it.comp}</td>
+                                    <td>Review item content; identify common errors.</td>
+                                    <td>Re-teach with guided practice, use concrete examples, peer tutoring.</td>
+                                </tr>`;
+                });
+                html += `</tbody></table></div>`;
+            }
+
+            // ---- PART IV - MOST MASTERED ----
+            html += `<h2>PART IV – MOST MASTERED ITEMS</h2>`;
+            if (mostItems.length === 0) {
+                html += `<p style="color:#b45309;">⚠️ No most mastered items (no item ≥80% correct).</p>`;
+            } else {
+                html += `<div class="table-wrap"><table>
+                                <thead><tr><th>Item #</th><th>% Correct</th><th>Competency</th><th>Suggested Enrichment</th></tr></thead>
+                                <tbody>`;
+                mostItems.forEach(it => {
+                    html += `<tr>
+                                    <td><strong>${it.itemNum}</strong></td>
+                                    <td>${pct(it.pct)}%</td>
+                                    <td>${it.comp}</td>
+                                    <td>Provide extension tasks, higher-order questions, real-world applications.</td>
+                                </tr>`;
+                });
+                html += `</tbody></table></div>`;
+            }
+
+            // ---- PART V - COMPETENCY MASTERY ----
+            html += `<h2>PART V – COMPETENCY MASTERY ANALYSIS</h2>`;
+            if (!hasComp || compResults.length === 0) {
+                html += `<p style="color:#64748b;">ℹ️ No competency mapping provided. Please upload TOS or provide item-to-competency mapping.</p>`;
+            } else {
+                html += `<div class="table-wrap"><table>
+                                <thead><tr><th>Competency</th><th>Items</th><th>Avg % Correct</th><th>Mastery Level</th><th>Interpretation</th><th>Recommended Action</th></tr></thead>
+                                <tbody>`;
+                compResults.forEach(cr => {
+                    const interp = cr.avgPct >= 80 ? 'Mastered' :
+                        cr.avgPct >= 60 ? 'Nearing Mastery' :
+                        cr.avgPct >= 40 ? 'Needs Reinforcement' : 'Priority for Remediation';
+                    const action = cr.avgPct >= 80 ? 'Proceed to enrichment' :
+                        cr.avgPct >= 60 ? 'Continue with reinforcement' :
+                        cr.avgPct >= 40 ? 'Re-teach with varied strategies' : 'Intensive remediation needed';
+                    html += `<tr>
+                                    <td><strong>${cr.comp}</strong></td>
+                                    <td>${cr.items.join(', ')}</td>
+                                    <td>${pct(cr.avgPct)}%</td>
+                                    <td>${badge(cr.avgPct)}</td>
+                                    <td>${interp}</td>
+                                    <td>${action}</td>
+                                </tr>`;
+                });
+                html += `</tbody></table></div>`;
+            }
+
+            // ---- PART VI - RANKING ----
+            html += `<h2>PART VI – RANKING OF COMPETENCIES (Least to Most Mastered)</h2>`;
+            if (!hasComp || compResults.length === 0) {
+                html += `<p style="color:#64748b;">ℹ️ No competency data to rank.</p>`;
+            } else {
+                const sorted = [...compResults].sort((a, b) => a.avgPct - b.avgPct);
+                html += `<div class="table-wrap"><table>
+                                <thead><tr><th>Rank</th><th>Competency</th><th>Items</th><th>Avg % Correct</th><th>Mastery Level</th><th>Recommended Action</th></tr></thead>
+                                <tbody>`;
+                sorted.forEach((cr, idx) => {
+                    const action = cr.avgPct >= 80 ? 'Enrichment' :
+                        cr.avgPct >= 60 ? 'Reinforcement' :
+                        cr.avgPct >= 40 ? 'Remediation' : 'Intensive Remediation';
+                    html += `<tr>
+                                    <td>${idx+1}</td>
+                                    <td><strong>${cr.comp}</strong></td>
+                                    <td>${cr.items.join(', ')}</td>
+                                    <td>${pct(cr.avgPct)}%</td>
+                                    <td>${badge(cr.avgPct)}</td>
+                                    <td>${action}</td>
+                                </tr>`;
+                });
+                html += `</tbody></table></div>`;
+            }
+
+            // ---- PART VII - INTERVENTION ----
+            html += `<h2>PART VII – LEARNERS NEEDING INTERVENTION</h2>`;
+            const pctFailed = totalLearners > 0 ? (failed / totalLearners) * 100 : 0;
+            html += `
+                        <div style="background:#f8fafc; padding:16px 20px; border-radius:14px; border:1px solid #e2e8f0; margin-bottom:12px;">
+                            <div><strong>Number of learners needing intervention:</strong> ${failed}</div>
+                            <div><strong>Percentage:</strong> ${pct(pctFailed)}%</div>
+                            <div><strong>Priority learning needs:</strong> Focus on least mastered competencies (see Part VI).</div>
+                            <div><strong>Suggested grouping for remediation:</strong> Small-group pull-out, peer tutoring, or targeted teacher-led sessions based on competency gaps.</div>
+                        </div>
+                    `;
+
+            // ---- PART VIII - REMEDIATION PLAN ----
+            html += `<h2>PART VIII – REMEDIATION AND ENRICHMENT PLAN</h2>`;
+            if (!hasComp || compResults.length === 0) {
+                html += `<p style="color:#64748b;">ℹ️ No competency data available. Please provide TOS or competency mapping.</p>`;
+            } else {
+                const sortedComp = [...compResults].sort((a, b) => a.avgPct - b.avgPct);
+                const lowestComp = sortedComp[0] || null;
+                const highestComp = sortedComp[sortedComp.length - 1] || null;
+
+                html += `<div class="table-wrap"><table>
+                                <thead><tr><th>Target Group</th><th>Focus Competency</th><th>Specific Learning Gap</th><th>Suggested Intervention</th><th>Learning Activity</th><th>Follow-up Assessment</th><th>Timeline</th></tr></thead>
+                                <tbody>`;
+                if (lowestComp && lowestComp.avgPct < 80) {
+                    html += `<tr>
+                                    <td>All learners (remediation)</td>
+                                    <td>${lowestComp.comp}</td>
+                                    <td>Lowest mastery at ${pct(lowestComp.avgPct)}% – items ${lowestComp.items.join(', ')}</td>
+                                    <td>Re-teach using concrete/visual aids, guided practice</td>
+                                    <td>Structured worksheets, group work, teacher modeling</td>
+                                    <td>Short quiz (5 items) on the competency</td>
+                                    <td>1 week</td>
+                                </tr>`;
+                }
+                if (highestComp && highestComp.avgPct >= 80) {
+                    html += `<tr>
+                                    <td>High-performing learners (enrichment)</td>
+                                    <td>${highestComp.comp}</td>
+                                    <td>Mastered at ${pct(highestComp.avgPct)}% – ready for extension</td>
+                                    <td>Provide higher-order thinking tasks, real-world problems</td>
+                                    <td>Project-based task, peer teaching, research</td>
+                                    <td>Performance task or portfolio</td>
+                                    <td>1–2 weeks</td>
+                                </tr>`;
+                }
+                if (!lowestComp || lowestComp.avgPct >= 80) {
+                    html += `<tr><td colspan="7" style="text-align:center; color:#0d7c3f;">✅ All competencies are at or above mastery level. Focus on enrichment.</td></tr>`;
+                }
+                html += `</tbody></table></div>`;
+            }
+
+            // ---- PART IX - INSIGHTS ----
+            html += `<h2>PART IX – TEACHER INSIGHTS</h2>`;
+            html += `
+                        <div style="background:#f1f5f9; padding:16px 20px; border-radius:14px; border-left:4px solid #0d7c3f; margin-bottom:12px;">
+                            <p><strong>Class Performance:</strong> The class achieved an MPS of <strong>${pct(mps)}%</strong> with ${passed} learners (${totalLearners > 0 ? pct((passed/totalLearners)*100) : 0}%) meeting the ${benchmarkPct}% benchmark. ${passed/totalLearners >= 0.75 ? 'This indicates satisfactory overall performance.' : passed/totalLearners >= 0.50 ? 'This indicates moderate performance with room for improvement.' : 'This indicates a need for intensive intervention.'}</p>
+                            <p><strong>Item-Level Trends:</strong> ${leastItems.length > 0 ? `Items ${leastItems.map(i=>i.itemNum).join(', ')} were identified as least mastered (below 60% correct).` : 'All items were at or above 60% correct, indicating good overall item mastery.'} ${mostItems.length > 0 ? `Items ${mostItems.map(i=>i.itemNum).join(', ')} were most mastered (≥80% correct).` : ''}</p>
+                            <p><strong>Competency Gaps:</strong> ${compResults.length > 0 ? `The lowest-performing competency is "${compResults[0]?.comp || 'N/A'}" at ${compResults[0] ? pct(compResults[0].avgPct) : 'N/A'}% average. The highest-performing competency is "${compResults[compResults.length-1]?.comp || 'N/A'}" at ${compResults[compResults.length-1] ? pct(compResults[compResults.length-1].avgPct) : 'N/A'}% average.` : 'No competency data available.'}</p>
+                            <p><strong>Instructional Planning:</strong> Prioritize re-teaching of least mastered competencies using differentiated instruction. Use formative assessments to monitor progress. Schedule LAC sessions to share effective teaching strategies for the identified gaps.</p>
+                            <p><strong>School Monitoring:</strong> This report serves as a basis for the School Improvement Plan (SIP) and classroom-based monitoring. Regular tracking of learner progress is recommended.</p>
+                            <p style="margin-top:8px; font-size:13px; color:#64748b;">👨‍🏫 <strong>Subject Teacher:</strong> ${teacherName}</p>
+                        </div>
+                    `;
+
+            // ---- PART X - CONCLUSION ----
+            html += `<h2>PART X – SUMMARY CONCLUSION</h2>`;
+            html += `
+                        <div style="background:#f8fafc; padding:16px 20px; border-radius:14px; border:1px solid #e2e8f0;">
+                            <p><strong>Overall Class Mastery:</strong> ${passed/totalLearners >= 0.75 ? 'Satisfactory' : passed/totalLearners >= 0.50 ? 'Moderate' : 'Needs Improvement'} – ${pct((passed/totalLearners)*100)}% of learners met the benchmark.</p>
+                            <p><strong>MPS Interpretation:</strong> The MPS of ${pct(mps)}% indicates ${mps >= 75 ? 'good overall mastery' : mps >= 60 ? 'moderate mastery with room for improvement' : 'low mastery requiring immediate intervention'}.</p>
+                            <p><strong>Priority Competencies for Remediation:</strong> ${compResults.length > 0 ? compResults.filter(c=>c.avgPct<60).map(c=>c.comp).join(', ') || 'None – all competencies are at or above 60%.' : 'No competency data provided.'}</p>
+                            <p><strong>Competencies for Enrichment:</strong> ${compResults.length > 0 ? compResults.filter(c=>c.avgPct>=80).map(c=>c.comp).join(', ') || 'None – no competencies at 80% or above.' : 'No competency data provided.'}</p>
+                            <p><strong>Recommended Next Steps:</strong> ${passed/totalLearners >= 0.75 ? 'Continue with current effective practices. Provide enrichment for high-performing learners.' : passed/totalLearners >= 0.50 ? 'Implement targeted remediation for least mastered competencies. Use formative assessment to track progress.' : 'Conduct intensive remediation. Re-teach foundational concepts. Consider restructuring instructional approaches.'}</p>
+                            <p style="margin-top:6px; font-size:13px; color:#64748b;">📋 Prepared by: <strong>${teacherName}</strong></p>
+                        </div>
+                    `;
+
+            // ---- PART XI - GRAPHS ----
+            html += `<h2>PART XI – GRAPHICAL PRESENTATION OF RESULTS</h2>`;
+            html += `<p style="color:#475569; margin-bottom:12px;">Charts are rendered below based on the computed data.</p>`;
+            html += `
+                        <div class="chart-container" id="chart1Container">
+                            <div class="chart-title">📊 Percentage Correct per Item</div>
+                            <canvas id="chart1"></canvas>
+                            <div class="chart-interp"><strong>Interpretation:</strong> This bar chart shows the percentage of learners who answered each item correctly. Color coding indicates mastery level: <span style="color:#065f46;">■</span> Most Mastered (≥80%), <span style="color:#92400e;">■</span> Moderately Mastered (60–79%), <span style="color:#991b1b;">■</span> Least Mastered (40–59%), <span style="color:#475569;">■</span> Not Mastered (&lt;40%). Items with low percentages are priorities for remediation.</div>
+                        </div>
+                        <div class="chart-container" id="chart2Container">
+                            <div class="chart-title">📊 Competency Mastery</div>
+                            <canvas id="chart2"></canvas>
+                            <div class="chart-interp"><strong>Interpretation:</strong> This chart displays the average percentage correct for each learning competency. Competencies below 60% are priority areas for remediation; those above 80% are ready for enrichment.</div>
+                        </div>
+                        <div class="chart-container" id="chart3Container">
+                            <div class="chart-title">📊 Learner Performance Based on Benchmark</div>
+                            <canvas id="chart3"></canvas>
+                            <div class="chart-interp"><strong>Interpretation:</strong> This chart shows the proportion of learners who met or exceeded the ${benchmarkPct}% benchmark vs. those who did not. ${passed/totalLearners >= 0.75 ? 'A majority of learners passed.' : passed/totalLearners >= 0.50 ? 'About half of the learners passed. Intervention is needed.' : 'Most learners did not meet the benchmark. Intensive intervention is required.'}</div>
+                        </div>
+                        <div class="chart-container" id="chart4Container">
+                            <div class="chart-title">📊 Item Difficulty Distribution</div>
+                            <canvas id="chart4"></canvas>
+                            <div class="chart-interp"><strong>Interpretation:</strong> This chart categorizes items by difficulty level. A balanced test has items across all categories. If many items are "Difficult" or "Very Difficult," consider adjusting instruction or item construction.</div>
+                        </div>
+                        <div class="chart-container" id="chart5Container">
+                            <div class="chart-title">📊 Score Statistics Summary</div>
+                            <canvas id="chart5"></canvas>
+                            <div class="chart-interp"><strong>Interpretation:</strong> This summary displays key score statistics. ${median !== null ? `The median (${median.toFixed(2)}) is close to the mean (${meanScore.toFixed(2)}), suggesting a relatively symmetric distribution.` : 'Median and mode are shown only when individual learner scores are provided.'} The MPS (${pct(mps)}%) is the overall percentage of correct responses across all learners and items.</div>
+                        </div>
+                    `;
+
+            el.innerHTML = html;
+        }
+
+        // ============================================================
+        //  RENDER CHARTS (Chart.js)
+        // ============================================================
+        function renderCharts(itemAnalysis, compResults, passed, failed, totalLearners, stats) {
+            for (const key in chartInstances) {
+                if (chartInstances[key]) {
+                    chartInstances[key].destroy();
+                    delete chartInstances[key];
+                }
+            }
+
+            // ---- Chart 1: Item % Correct ----
+            const ctx1 = document.getElementById('chart1').getContext('2d');
+            const labels1 = itemAnalysis.map(it => '#' + it.itemNum);
+            const data1 = itemAnalysis.map(it => it.pct);
+            const colors1 = itemAnalysis.map(it => {
+                if (it.pct >= 80) return '#0d7c3f';
+                if (it.pct >= 60) return '#d97706';
+                if (it.pct >= 40) return '#dc2626';
+                return '#64748b';
+            });
+
+            chartInstances.chart1 = new Chart(ctx1, {
+                type: 'bar',
+                data: {
+                    labels: labels1,
+                    datasets: [{
+                        label: '% Correct',
+                        data: data1,
+                        backgroundColor: colors1,
+                        borderRadius: 4,
+                        borderSkipped: false,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: { legend: { display: false }, tooltip: { callbacks: { label: function(ctx) { return ctx
+                                    .raw.toFixed(2) + '%'; } } } },
+                    scales: {
+                        y: { beginAtZero: true, max: 100, title: { display: true, text: 'Percentage Correct' } },
+                        x: { title: { display: true, text: 'Item Number' } }
+                    }
+                }
+            });
+
+            // ---- Chart 2: Competency Mastery ----
+            const ctx2 = document.getElementById('chart2').getContext('2d');
+            const compLabels = compResults.map(c => c.comp.length > 20 ? c.comp.substring(0, 20) + '…' : c.comp);
+            const compData = compResults.map(c => c.avgPct);
+            const compColors = compData.map(v => {
+                if (v >= 80) return '#0d7c3f';
+                if (v >= 60) return '#d97706';
+                if (v >= 40) return '#dc2626';
+                return '#64748b';
+            });
+
+            if (compResults.length > 0) {
+                chartInstances.chart2 = new Chart(ctx2, {
+                    type: 'bar',
+                    data: {
+                        labels: compLabels,
+                        datasets: [{
+                            label: 'Average % Correct',
+                            data: compData,
+                            backgroundColor: compColors,
+                            borderRadius: 4,
+                            borderSkipped: false,
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: true,
+                        plugins: { legend: { display: false }, tooltip: { callbacks: { label: function(ctx) { return ctx
+                                        .raw.toFixed(2) + '%'; } } } },
+                        scales: {
+                            y: { beginAtZero: true, max: 100, title: { display: true, text: 'Average % Correct' } },
+                            x: { title: { display: true, text: 'Learning Competency' } }
+                        }
+                    }
+                });
+            } else {
+                const parent = document.getElementById('chart2').parentElement;
+                parent.innerHTML =
+                    `<p style="text-align:center; color:#64748b; padding:30px 0;">ℹ️ No competency data available for chart.</p>`;
+            }
+
+            // ---- Chart 3: Pie ----
+            const ctx3 = document.getElementById('chart3').getContext('2d');
+            chartInstances.chart3 = new Chart(ctx3, {
+                type: 'pie',
+                data: {
+                    labels: [`Passed (${passed})`, `Failed (${failed})`],
+                    datasets: [{
+                        data: [passed, failed],
+                        backgroundColor: ['#0d7c3f', '#dc2626'],
+                        borderColor: '#fff',
+                        borderWidth: 2,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: { position: 'bottom' },
+                        tooltip: {
+                            callbacks: {
+                                label: function(ctx) {
+                                    const total = ctx.dataset.data.reduce((a, b) => a + b, 0);
+                                    const pct = total > 0 ? (ctx.raw / total * 100).toFixed(2) : 0;
+                                    return ctx.label + ': ' + ctx.raw + ' (' + pct + '%)';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            // ---- Chart 4: Difficulty Distribution ----
+            const ctx4 = document.getElementById('chart4').getContext('2d');
+            const diffCounts = { 'Easy': 0, 'Average': 0, 'Difficult': 0, 'Very Difficult': 0 };
+            itemAnalysis.forEach(it => {
+                if (it.difficulty in diffCounts) diffCounts[it.difficulty]++;
+            });
+            const diffLabels = ['Easy', 'Average', 'Difficult', 'Very Difficult'];
+            const diffData = diffLabels.map(l => diffCounts[l] || 0);
+            const diffColors = ['#0d7c3f', '#d97706', '#dc2626', '#64748b'];
+
+            chartInstances.chart4 = new Chart(ctx4, {
+                type: 'bar',
+                data: {
+                    labels: diffLabels,
+                    datasets: [{
+                        label: 'Number of Items',
+                        data: diffData,
+                        backgroundColor: diffColors,
+                        borderRadius: 4,
+                        borderSkipped: false,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: { legend: { display: false }, tooltip: { callbacks: { label: function(ctx) { return ctx
+                                .raw + ' item(s)'; } } } },
+                    scales: {
+                        y: { beginAtZero: true, title: { display: true, text: 'Count' } },
+                        x: { title: { display: true, text: 'Difficulty Level' } }
+                    }
+                }
+            });
+
+            // ---- Chart 5: Statistics ----
+            const ctx5 = document.getElementById('chart5').getContext('2d');
+            const statLabels = ['Highest', 'Lowest', 'Mean', 'Median', 'Mode', 'MPS'];
+            const statData = [
+                stats.highest !== null ? stats.highest : 0,
+                stats.lowest !== null ? stats.lowest : 0,
+                stats.mean !== null ? stats.mean : 0,
+                stats.median !== null ? stats.median : 0,
+                stats.mode !== null ? stats.mode : 0,
+                stats.mps !== null ? stats.mps : 0,
+            ];
+            const statColors = ['#0d7c3f', '#dc2626', '#065f46', '#d97706', '#7c3aed', '#0f3b6e'];
+            const statLabelsDisplay = ['Highest', 'Lowest', 'Mean', 'Median', 'Mode', 'MPS'];
+            const statDataDisplay = [
+                stats.highest !== null ? stats.highest : 'N/A',
+                stats.lowest !== null ? stats.lowest : 'N/A',
+                stats.mean !== null ? stats.mean.toFixed(2) : 'N/A',
+                stats.median !== null ? stats.median.toFixed(2) : 'N/A',
+                stats.mode !== null ? stats.mode : 'N/A',
+                stats.mps !== null ? stats.mps.toFixed(2) + '%' : 'N/A',
+            ];
+
+            chartInstances.chart5 = new Chart(ctx5, {
+                type: 'bar',
+                data: {
+                    labels: statLabels,
+                    datasets: [{
+                        label: 'Score',
+                        data: statData,
+                        backgroundColor: statColors,
+                        borderRadius: 4,
+                        borderSkipped: false,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(ctx) {
+                                    const idx = ctx.dataIndex;
+                                    return statLabelsDisplay[idx] + ': ' + statDataDisplay[idx];
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: { beginAtZero: true, title: { display: true, text: 'Score / Percentage' } },
+                        x: { title: { display: true, text: 'Statistic' } }
+                    }
+                }
+            });
+
+            const chart5Container = document.getElementById('chart5Container');
+            if (stats.median === null || stats.mode === null) {
+                const note = document.createElement('div');
+                note.style.cssText =
+                    'font-size:12px; color:#64748b; margin-top:6px; text-align:center; background:#f1f5f9; padding:6px 12px; border-radius:8px;';
+                note.textContent = 'ℹ️ Median and Mode are shown only when individual learner scores are provided.';
+                chart5Container.appendChild(note);
+            }
+        }
+
+        // ============================================================
+        //  RESET
+        // ============================================================
+        function resetAll() {
+            if (!confirm('Clear all data and start a new report?')) return;
+            for (const key in chartInstances) {
+                if (chartInstances[key]) {
+                    chartInstances[key].destroy();
+                    delete chartInstances[key];
+                }
+            }
+            document.getElementById('reportSection').classList.remove('visible');
+            document.getElementById('reportContent').innerHTML = '';
+            goStep(1);
+        }
+
+        // ============================================================
+        //  INIT
+        // ============================================================
+        document.addEventListener('DOMContentLoaded', function() {
+            populateItemInputs();
+            populateCompInputs();
+            goStep(1);
+
+            // Check subscription on load
+            const sub = checkSubscriptionStatus();
+            if (sub) {
+                // already subscribed, show valid until in overlay
+                const validUntil = document.getElementById('subValidUntil');
+                const expiryDisplay = document.getElementById('subExpiryDisplay');
+                const expiryDate = new Date(sub.expiry);
+                expiryDisplay.textContent = expiryDate.toLocaleDateString('en-PH', { year: 'numeric', month: 'long',
+                    day: 'numeric' });
+                validUntil.style.display = 'block';
+                document.getElementById('subscriptionOverlay').classList.remove('active');
+            } else {
+                // show overlay after a short delay
+                setTimeout(() => {
+                    document.getElementById('subscriptionOverlay').classList.add('active');
+                    document.getElementById('subCodeInput').focus();
+                }, 500);
+            }
+
+            // Enter key on code input
+            document.getElementById('subCodeInput').addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    validateSubscription();
+                }
+            });
+        });
+    </script>
+
+</body>
+</html>
